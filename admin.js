@@ -20,7 +20,8 @@ var adminReady = {
     products: false,
     discounts: false,
     orders: false,
-    settings: false
+    settings: false,
+    notified: false
 };
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -311,7 +312,10 @@ function subscribeToCollections() {
 function checkAdminReady() {
     if (adminReady.products && adminReady.discounts && adminReady.orders && adminReady.settings) {
         setAdminLoading(false);
-        setAdminStatus('تمت مزامنة البيانات بنجاح.', 'success');
+        if (!adminReady.notified) {
+            adminReady.notified = true;
+            setAdminStatus('تمت مزامنة البيانات بنجاح.', 'success');
+        }
     }
 }
 
