@@ -1,0 +1,4 @@
+.wrangler/
+
+# local secrets
+faidi_auth_secret.txt
