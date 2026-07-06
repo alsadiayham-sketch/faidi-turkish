@@ -218,6 +218,7 @@ body.has-banner .hero { margin-top: 0; }
 .hero .hero-slide.active { opacity: 1; z-index: 2; }
 .hero .hero-slide > img,
 .hero .hero-slide > video { width: 100%; height: 100%; object-fit: cover; }
+.hero-owner-img { object-position: center 22%; }
 .hero-overlay {
     position: absolute;
     inset: 0;
@@ -449,7 +450,7 @@ body.has-banner .hero { margin-top: 0; }
 .product-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-hover); border-color: var(--gold-soft); }
 .product-image {
     position: relative;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 9 / 16;
     overflow: hidden;
     background: var(--bg-alt);
 }
@@ -729,7 +730,7 @@ body.has-banner .hero { margin-top: 0; }
 .pdp-close:hover { background: var(--gold); color: #fff; transform: rotate(90deg); }
 html[dir="rtl"] .pdp-close { right: auto; left: 16px; }
 .pdp-content { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-.pdp-image { aspect-ratio: 3 / 4; overflow: hidden; background: var(--bg-alt); }
+.pdp-image { aspect-ratio: 9 / 16; overflow: hidden; background: var(--bg-alt); }
 html[dir="rtl"] .pdp-image { border-radius: 0; }
 .pdp-image img { width: 100%; height: 100%; object-fit: cover; }
 .pdp-info { padding: 44px 38px; }
@@ -981,7 +982,7 @@ html[dir="rtl"] .cart-sidebar { right: 0; }
 @media (max-width: 920px) {
     .about-content { grid-template-columns: 1fr; gap: 30px; }
     .pdp-content { grid-template-columns: 1fr; }
-    .pdp-image { aspect-ratio: 16/10; }
+    .pdp-image { aspect-ratio: 4/5; }
     .filter-panel { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
