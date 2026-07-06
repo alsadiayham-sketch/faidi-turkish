@@ -256,14 +256,22 @@ function renderProducts(productsToShow) {
     }
 
     productsToShow.forEach(function (product) {
-        var sizeData = getSizeData(product, 0);
-        var pricing = getFinalPrice(product, 0, discounts);
-        var statusBadge = getStatusBadge(product.status);
+        var soldOut = isProductSoldOut(product);
+        var defaultIdx = getFirstAvailableSizeIdx(product);
+        var sizeData = getSizeData(product, defaultIdx);
+        var pricing = getFinalPrice(product, defaultIdx, discounts);
+        var statusBadge = getStatusBadge(soldOut ? 'soldout' : product.status);
         var discountBadge = pricing.hasDiscount ? '<span class="discount-badge">-' + pricing.discountPercent + '%</span>' : '';
-        var soldOutClass = product.status === 'soldout' ? 'sold-out' : '';
+        var soldOutClass = soldOut ? 'sold-out' : '';
         var sizeSelector = product.sizes.length > 1
-            ? '<div class="card-size-selector"><label for="sizeSelect-' + product.id + '">الحجم:</label><select id="sizeSelect-' + product.id + '" class="size-select" onclick="event.stopPropagation()" onchange="updateProductSize(\'' + product.id + '\', this.value)">' + product.sizes.map(function (size, idx) { return '<option value="' + idx + '">' + getSizeLabel(size) + '</option>'; }).join('') + '</select></div>'
+            ? '<div class="card-size-selector"><label for="sizeSelect-' + product.id + '">الحجم:</label><select id="sizeSelect-' + product.id + '" class="size-select" onclick="event.stopPropagation()" onchange="updateProductSize(\'' + product.id + '\', this.value)">' + product.sizes.map(function (size, idx) {
+                var avail = isSizeAvailable(product, idx);
+                return '<option value="' + idx + '"' + (idx === defaultIdx ? ' selected' : '') + (avail ? '' : ' disabled') + '>' + getSizeLabel(size) + (avail ? '' : ' (نفذ)') + '</option>';
+            }).join('') + '</select></div>'
             : '<div class="card-size-single"><span>الحجم:</span><strong>' + getSizeLabel(sizeData) + '</strong></div>';
+
+        var posterSrc = product.poster || product.image;
+        var gifAttr = product.poster ? ' data-gif="' + product.image + '" data-poster="' + product.poster + '"' : '';
 
         var card = document.createElement('div');
         card.className = 'product-card ' + soldOutClass;
@@ -272,7 +280,7 @@ function renderProducts(productsToShow) {
             discountBadge,
             statusBadge,
             '<div class="product-image" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
-            '<img src="' + product.image + '" alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
+            '<img class="product-media" src="' + posterSrc + '"' + gifAttr + ' alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
             '</div>',
             '<div class="product-info" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
             '<span class="product-brand">' + product.brand + '</span>',
@@ -283,10 +291,36 @@ function renderProducts(productsToShow) {
             '<div class="product-card-controls">' + sizeSelector + '</div>',
             '<div class="product-card-actions">',
             '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><span id="cardQty-' + product.id + '">1</span><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
-            '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' ? 'disabled' : '') + '>' + (product.status === 'soldout' ? 'نفذت الكمية' : 'أضيفي') + '</button>',
+            '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (soldOut ? 'disabled' : '') + '>' + (soldOut ? 'نفذت الكمية' : 'أضيفي') + '</button>',
             '</div>'
         ].join('');
         grid.appendChild(card);
+    });
+
+    observeProductMedia();
+}
+
+// Only animate GIFs for cards currently visible; posters stay for the rest (fixes stutter, scales to hundreds).
+var _mediaObserver = null;
+function observeProductMedia() {
+    if (typeof IntersectionObserver === 'undefined') return;
+    if (!_mediaObserver) {
+        _mediaObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                var img = entry.target;
+                var gif = img.getAttribute('data-gif');
+                var poster = img.getAttribute('data-poster');
+                if (!gif) return;
+                if (entry.isIntersecting) {
+                    if (img.src !== gif) img.src = gif;
+                } else if (poster && img.src !== poster) {
+                    img.src = poster;
+                }
+            });
+        }, { rootMargin: '200px 0px', threshold: 0.01 });
+    }
+    document.querySelectorAll('.product-media[data-gif]').forEach(function (img) {
+        _mediaObserver.observe(img);
     });
 }
 
@@ -299,6 +333,8 @@ function updateProductSize(productId, sizeIdx) {
     var priceEl = document.getElementById('productPrice-' + productId);
     if (sizeEl) sizeEl.textContent = getSizeLabel(sizeData);
     if (priceEl) priceEl.innerHTML = getPriceHTML(pricing);
+    var qtyEl = document.getElementById('cardQty-' + productId);
+    if (qtyEl) qtyEl.textContent = '1';
 }
 
 function getStatusBadge(status) {
@@ -779,19 +815,40 @@ function getSelectedCardSizeIndex(productId) {
     return select ? parseInt(select.value || '0', 10) || 0 : 0;
 }
 
+function showToast(message) {
+    var toast = document.getElementById('faidiToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'faidiToast';
+        toast.className = 'faidi-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+}
+
 function addToCart(event, productId) {
     event.stopPropagation();
     var product = products.find(function (entry) { return entry.id === productId; });
-    if (!product || product.status === 'soldout') return;
+    if (!product || isProductSoldOut(product)) return;
 
     var qty = parseInt(document.getElementById('cardQty-' + productId).textContent, 10) || 1;
     var sizeIdx = getSelectedCardSizeIndex(productId);
+    if (!isSizeAvailable(product, sizeIdx)) { showToast('هذا الحجم غير متوفر حالياً'); return; }
+
+    var existing = cart.find(function (item) { return item.id === productId && item.sizeIdx === sizeIdx; });
+    var inCart = existing ? existing.qty : 0;
+    var maxAdd = getMaxQty(product, sizeIdx, inCart);
+    if (maxAdd <= 0) { showToast('لا يمكن إضافة كمية أكبر، الكمية المتوفرة محدودة'); return; }
+    if (qty > maxAdd) qty = maxAdd;
+
     var pricing = getFinalPrice(product, sizeIdx, discounts);
     var btn = event.currentTarget;
     var img = btn.closest('.product-card').querySelector('.product-image img');
     flyToCart(img, product);
 
-    var existing = cart.find(function (item) { return item.id === productId && item.sizeIdx === sizeIdx; });
     if (existing) existing.qty += qty;
     else cart.push({ id: productId, sizeIdx: sizeIdx, qty: qty, price: pricing.final, name: product.name, brand: product.brand, image: product.image });
 
@@ -1061,6 +1118,12 @@ function changeCardQty(productId, delta) {
     if (!span) return;
     var qty = (parseInt(span.textContent, 10) || 1) + delta;
     if (qty < 1) qty = 1;
+    var product = products.find(function (entry) { return entry.id === productId; });
+    if (product) {
+        var sizeIdx = getSelectedCardSizeIndex(productId);
+        var stock = getSizeStock(product, sizeIdx);
+        if (stock !== null && qty > stock) { qty = Math.max(1, stock); showToast('الكمية المتوفرة: ' + stock); }
+    }
     if (qty > 99) qty = 99;
     span.textContent = qty;
 }
@@ -1129,11 +1192,17 @@ function renderCart() {
 function updateCartQty(productId, sizeIdx, delta) {
     var item = cart.find(function (entry) { return entry.id === productId && entry.sizeIdx === sizeIdx; });
     if (!item || item.type === 'custom_package') return;
-    item.qty += delta;
-    if (item.qty < 1) {
+    var newQty = item.qty + delta;
+    if (newQty < 1) {
         removeFromCart(productId, sizeIdx);
         return;
     }
+    var product = products.find(function (entry) { return entry.id === productId; });
+    if (product) {
+        var stock = getSizeStock(product, sizeIdx);
+        if (stock !== null && newQty > stock) { newQty = stock; showToast('الكمية المتوفرة: ' + stock); }
+    }
+    item.qty = newQty;
     saveCart();
     updateCartBadge();
     renderCart();
@@ -1262,7 +1331,7 @@ function openPDP(productId) {
     if (!product) return;
 
     currentPDPProduct = product;
-    currentPDPSizeIdx = 0;
+    currentPDPSizeIdx = getFirstAvailableSizeIdx(product);
     pdpQty = 1;
 
     document.getElementById('pdpImage').innerHTML = '<img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
@@ -1273,7 +1342,7 @@ function openPDP(productId) {
     updatePDPDisplay();
 
     var addBtn = document.getElementById('pdpAddBtn');
-    if (product.status === 'soldout') {
+    if (isProductSoldOut(product)) {
         addBtn.textContent = 'نفذت الكمية';
         addBtn.disabled = true;
         addBtn.style.background = '#9ca3af';
@@ -1325,12 +1394,15 @@ function renderPDPSizeOptions() {
 
     section.style.display = 'flex';
     container.innerHTML = currentPDPProduct.sizes.map(function (size, idx) {
-        return '<button type="button" class="pdp-size-btn ' + (idx === currentPDPSizeIdx ? 'active' : '') + '" onclick="selectPDPSize(' + idx + ')">' + getSizeLabel(size) + '</button>';
+        var avail = isSizeAvailable(currentPDPProduct, idx);
+        return '<button type="button" class="pdp-size-btn ' + (idx === currentPDPSizeIdx ? 'active' : '') + (avail ? '' : ' sold-out') + '"' + (avail ? '' : ' disabled') + ' onclick="selectPDPSize(' + idx + ')">' + getSizeLabel(size) + (avail ? '' : ' (نفذ)') + '</button>';
     }).join('');
 }
 
 function selectPDPSize(sizeIdx) {
+    if (!isSizeAvailable(currentPDPProduct, sizeIdx)) return;
     currentPDPSizeIdx = sizeIdx;
+    if (pdpQty > 1) { pdpQty = 1; document.getElementById('pdpQty').textContent = '1'; }
     renderPDPSizeOptions();
     updatePDPDisplay();
 }
@@ -1341,6 +1413,14 @@ function updatePDPDisplay() {
     var pricing = getFinalPrice(currentPDPProduct, currentPDPSizeIdx, discounts);
     document.getElementById('pdpMeta').innerHTML = '<span>' + currentPDPProduct.category + '</span><span>' + getSizeLabel(sizeData) + '</span>';
     document.getElementById('pdpPrice').innerHTML = (pricing.hasDiscount ? '<span class="original-price">' + formatCurrency(pricing.original) + '</span>' : '') + '<span class="final-price">' + formatCurrency(pricing.final) + '</span>';
+    var stockEl = document.getElementById('pdpStock');
+    var stock = getSizeStock(currentPDPProduct, currentPDPSizeIdx);
+    if (stockEl) {
+        if (stock === null) { stockEl.textContent = ''; stockEl.style.display = 'none'; }
+        else if (stock <= 0) { stockEl.textContent = 'نفذت الكمية'; stockEl.className = 'pdp-stock out'; stockEl.style.display = 'block'; }
+        else if (stock <= 5) { stockEl.textContent = 'متبقٍ ' + stock + ' قطع فقط'; stockEl.className = 'pdp-stock low'; stockEl.style.display = 'block'; }
+        else { stockEl.textContent = 'متوفر في المخزون'; stockEl.className = 'pdp-stock in'; stockEl.style.display = 'block'; }
+    }
 }
 
 function closePDP(event) {
@@ -1353,17 +1433,27 @@ function closePDP(event) {
 function changePDPQty(delta) {
     pdpQty += delta;
     if (pdpQty < 1) pdpQty = 1;
+    if (currentPDPProduct) {
+        var stock = getSizeStock(currentPDPProduct, currentPDPSizeIdx);
+        if (stock !== null && pdpQty > stock) { pdpQty = Math.max(1, stock); showToast('الكمية المتوفرة: ' + stock); }
+    }
     if (pdpQty > 99) pdpQty = 99;
     document.getElementById('pdpQty').textContent = pdpQty;
 }
 
 function addFromPDP() {
-    if (!currentPDPProduct || currentPDPProduct.status === 'soldout') return;
+    if (!currentPDPProduct || isProductSoldOut(currentPDPProduct)) return;
+    if (!isSizeAvailable(currentPDPProduct, currentPDPSizeIdx)) { showToast('هذا الحجم غير متوفر حالياً'); return; }
+
+    var existing = cart.find(function (item) { return item.id === currentPDPProduct.id && item.sizeIdx === currentPDPSizeIdx; });
+    var inCart = existing ? existing.qty : 0;
+    var maxAdd = getMaxQty(currentPDPProduct, currentPDPSizeIdx, inCart);
+    if (maxAdd <= 0) { showToast('لا يمكن إضافة كمية أكبر، الكمية المتوفرة محدودة'); return; }
+    var addQty = Math.min(pdpQty, maxAdd);
 
     var pricing = getFinalPrice(currentPDPProduct, currentPDPSizeIdx, discounts);
-    var existing = cart.find(function (item) { return item.id === currentPDPProduct.id && item.sizeIdx === currentPDPSizeIdx; });
-    if (existing) existing.qty += pdpQty;
-    else cart.push({ id: currentPDPProduct.id, sizeIdx: currentPDPSizeIdx, qty: pdpQty, price: pricing.final, name: currentPDPProduct.name, brand: currentPDPProduct.brand, image: currentPDPProduct.image });
+    if (existing) existing.qty += addQty;
+    else cart.push({ id: currentPDPProduct.id, sizeIdx: currentPDPSizeIdx, qty: addQty, price: pricing.final, name: currentPDPProduct.name, brand: currentPDPProduct.brand, image: currentPDPProduct.image });
 
     saveCart();
     updateCartBadge();

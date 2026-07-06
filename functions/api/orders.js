@@ -45,7 +45,50 @@ export async function onRequestPost(context) {
         .prepare("INSERT INTO orders (id, data, status, created_at) VALUES (?, ?, ?, ?)")
         .bind(id, JSON.stringify(data), status, now)
         .run();
+
+    // Best-effort per-size stock decrement (untracked sizes have stock === null and are skipped).
+    try {
+        await decrementStock(context.env.DB, Array.isArray(body.items) ? body.items : []);
+    } catch (e) {
+        // Non-fatal: never block an order because stock bookkeeping failed.
+    }
+
     return json({ id, order: { ...data, id, status, createdAt: now } });
+}
+
+async function decrementStock(DB, items) {
+    for (const item of items) {
+        if (!item || item.type === "custom_package") continue;
+        const productId = item.productId != null ? String(item.productId) : (item.id != null ? String(item.id) : null);
+        if (!productId) continue;
+        const qty = Math.max(0, parseInt(item.qty, 10) || 0);
+        if (!qty) continue;
+
+        const row = await DB.prepare("SELECT id, data FROM products WHERE id = ?").bind(productId).first();
+        if (!row) continue;
+        let product;
+        try { product = JSON.parse(row.data) || {}; } catch (e) { continue; }
+        if (!Array.isArray(product.sizes) || !product.sizes.length) continue;
+
+        let idx = Number(item.sizeIdx);
+        if (!(idx >= 0 && idx < product.sizes.length)) idx = -1;
+        if (idx < 0 && item.sizeLabel) {
+            idx = product.sizes.findIndex(function (s) {
+                return s && String(s.size) && item.sizeLabel.indexOf(String(s.size)) === 0;
+            });
+        }
+        if (idx < 0 || idx >= product.sizes.length) continue;
+
+        const size = product.sizes[idx];
+        if (!size || size.stock === null || size.stock === undefined || size.stock === "") continue;
+        const current = parseInt(size.stock, 10);
+        if (isNaN(current)) continue;
+        size.stock = Math.max(0, current - qty);
+
+        await DB.prepare("UPDATE products SET data = ?, updated_at = ? WHERE id = ?")
+            .bind(JSON.stringify(product), Date.now(), productId)
+            .run();
+    }
 }
 
 // PATCH /api/orders?id=...  body { status } -> any authenticated user

@@ -396,7 +396,11 @@ async function bulkDeleteProducts() {
 }
 
 function formatSizes(product) {
-    return product.sizes.map(function (size) { return getSizeLabel(size); }).join(' / ');
+    return product.sizes.map(function (size) {
+        var label = getSizeLabel(size);
+        if (size.stock === null || size.stock === undefined) return label;
+        return label + ' (' + size.stock + ')';
+    }).join(' / ');
 }
 
 function formatPrices(product) {
@@ -406,14 +410,15 @@ function formatPrices(product) {
     return formatCurrency(Math.min.apply(null, prices)) + ' - ' + formatCurrency(Math.max.apply(null, prices));
 }
 
-function createEmptySize() { return { size: 'واحد', unit: 'قطعة', price: '' }; }
+function createEmptySize() { return { size: 'واحد', unit: 'قطعة', price: '', stock: '' }; }
 
 function addSizeRow(sizeData) {
     var safeSize = sizeData || createEmptySize();
+    var stockVal = (safeSize.stock === null || safeSize.stock === undefined) ? '' : safeSize.stock;
     var container = document.getElementById('sizesContainer');
     var row = document.createElement('div');
     row.className = 'size-row';
-    row.innerHTML = '<input type="text" class="size-value" placeholder="الحجم أو النوع" value="' + safeSize.size + '"><select class="size-unit"><option value="قطعة" ' + (safeSize.unit === 'قطعة' ? 'selected' : '') + '>قطعة</option><option value="ml" ' + (safeSize.unit === 'ml' ? 'selected' : '') + '>مل (ml)</option><option value="g" ' + (safeSize.unit === 'g' ? 'selected' : '') + '>غرام (g)</option></select><input type="number" class="size-price" min="0" placeholder="السعر ₪" value="' + safeSize.price + '"><button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">حذف</button>';
+    row.innerHTML = '<input type="text" class="size-value" placeholder="الحجم أو النوع" value="' + safeSize.size + '"><select class="size-unit"><option value="قطعة" ' + (safeSize.unit === 'قطعة' ? 'selected' : '') + '>قطعة</option><option value="ml" ' + (safeSize.unit === 'ml' ? 'selected' : '') + '>مل (ml)</option><option value="g" ' + (safeSize.unit === 'g' ? 'selected' : '') + '>غرام (g)</option></select><input type="number" class="size-price" min="0" placeholder="السعر ₪" value="' + safeSize.price + '"><input type="number" class="size-stock" min="0" placeholder="المخزون" title="اتركيه فارغاً لكمية غير محدودة" value="' + stockVal + '"><button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">حذف</button>';
     container.appendChild(row);
 }
 
@@ -437,6 +442,7 @@ function openProductModal(product) {
     document.getElementById('productCategory').value = product ? product.category : '';
     document.getElementById('productDiscount').value = product ? product.discount : 0;
     document.getElementById('productImage').value = product ? product.image : '';
+    document.getElementById('productPoster').value = product ? (product.poster || '') : '';
     document.getElementById('productImageFile').value = '';
     document.getElementById('imagePreview').innerHTML = product && product.image ? '<img src="' + product.image + '" onerror="this.style.display=\'none\'">' : '';
     document.getElementById('productStatus').value = product ? product.status : 'normal';
@@ -453,10 +459,13 @@ function editProduct(id) {
 
 function collectSizes() {
     return Array.from(document.querySelectorAll('#sizesContainer .size-row')).map(function (row) {
+        var stockInput = row.querySelector('.size-stock');
+        var stockRaw = stockInput ? stockInput.value.trim() : '';
         return {
             size: row.querySelector('.size-value').value.trim(),
             unit: row.querySelector('.size-unit').value,
-            price: parseFloat(row.querySelector('.size-price').value || '0')
+            price: parseFloat(row.querySelector('.size-price').value || '0'),
+            stock: stockRaw === '' ? '' : Math.max(0, parseInt(stockRaw, 10) || 0)
         };
     }).filter(function (size) { return size.size && size.price > 0; });
 }
@@ -471,11 +480,21 @@ async function saveProduct(event) {
 
     // Handle image upload
     var imageUrl = document.getElementById('productImage').value.trim();
+    var posterUrl = document.getElementById('productPoster').value.trim();
     var fileInput = document.getElementById('productImageFile');
     if (fileInput.files && fileInput.files[0]) {
         setAdminLoading(true);
         setAdminStatus('جاري معالجة الوسائط...', 'info');
         imageUrl = await uploadProductMedia(fileInput.files[0], nextId);
+        // Generate a static first-frame poster so the storefront loads fast (no stutter).
+        try {
+            setAdminStatus('جاري إنشاء صورة المعاينة...', 'info');
+            posterUrl = await generatePosterFromUrl(imageUrl, nextId + '_poster');
+        } catch (e) { posterUrl = ''; }
+    } else if (imageUrl && !posterUrl) {
+        // Manual image URL without a poster: try to build one (best-effort).
+        try { posterUrl = await generatePosterFromUrl(imageUrl, nextId + '_poster'); }
+        catch (e) { posterUrl = ''; }
     }
 
     var productData = normalizeProduct({
@@ -486,6 +505,7 @@ async function saveProduct(event) {
         sizes: sizes,
         discount: parseInt(document.getElementById('productDiscount').value || '0', 10) || 0,
         image: imageUrl,
+        poster: posterUrl,
         status: document.getElementById('productStatus').value
     });
 
@@ -699,6 +719,19 @@ function renderDashboard() {
     var ordersWeek = orders.filter(function (order) { return new Date(order.date) >= weekStart; }).length;
     var ordersMonth = orders.filter(function (order) { return new Date(order.date) >= monthStart; }).length;
 
+    // Inventory (storage) stats
+    var totalStock = 0, trackedSizes = 0, lowSizes = 0, outSizes = 0, soldOutProducts = 0;
+    products.forEach(function (product) {
+        (product.sizes || []).forEach(function (size) {
+            if (size.stock === null || size.stock === undefined) return;
+            trackedSizes++;
+            totalStock += size.stock;
+            if (size.stock === 0) outSizes++;
+            else if (size.stock <= 5) lowSizes++;
+        });
+        if (isProductSoldOut(product)) soldOutProducts++;
+    });
+
     document.getElementById('statsGrid').innerHTML = [
         statCard('إجمالي الإيراد', formatCurrency(totalRevenue), 'من الطلبات المكتملة'),
         statCard('إجمالي الطلبات', totalOrders, 'كل الحالات'),
@@ -707,7 +740,11 @@ function renderDashboard() {
         statCard('طلبات هذا الأسبوع', ordersWeek, 'آخر 7 أيام'),
         statCard('طلبات هذا الشهر', ordersMonth, 'آخر 30 يوم'),
         statCard('عدد المنتجات', products.length, 'في المتجر'),
-        statCard('عدد الخصومات', discounts.length, 'الخصومات النشطة')
+        statCard('عدد الخصومات', discounts.length, 'الخصومات النشطة'),
+        statCard('إجمالي المخزون', totalStock, trackedSizes + ' حجم متتبَّع'),
+        statCard('مخزون منخفض', lowSizes, '5 قطع أو أقل'),
+        statCard('نفذت الكمية', outSizes, 'أحجام مطلوب تعبئتها'),
+        statCard('منتجات نافذة', soldOutProducts, 'غير متاحة للبيع')
     ].join('');
 
     renderRevenueChart();
@@ -868,6 +905,43 @@ async function uploadProductImage(file, productId) {
 }
 
 /* ===== Media helpers: video → GIF, blob → ImgBB, unified product media ===== */
+// Build a small static JPG from the first frame of a GIF/image URL and upload it (poster for fast loading).
+function generatePosterFromUrl(url, name) {
+    return new Promise(function (resolve, reject) {
+        if (!url) { reject(new Error('no url')); return; }
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+            try {
+                var canvas = document.createElement('canvas');
+                var maxSize = 400;
+                var w = img.naturalWidth || img.width || 400;
+                var h = img.naturalHeight || img.height || 400;
+                if (w > h) { if (w > maxSize) { h = h * maxSize / w; w = maxSize; } }
+                else { if (h > maxSize) { w = w * maxSize / h; h = maxSize; } }
+                canvas.width = Math.max(2, Math.round(w));
+                canvas.height = Math.max(2, Math.round(h));
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                var base64 = canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
+                var formData = new FormData();
+                formData.append('key', 'de10f7f874d9dbf904fe0cd0ad00332d');
+                formData.append('image', base64);
+                formData.append('name', name || 'poster');
+                fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data && data.data && data.data.url) resolve(data.data.url);
+                        else reject(new Error('poster upload failed'));
+                    })
+                    .catch(reject);
+            } catch (e) { reject(e); }
+        };
+        img.onerror = function () { reject(new Error('poster image load failed')); };
+        img.src = url;
+    });
+}
+
 async function uploadProductMedia(file, productId) {
     if (file && file.type && file.type.indexOf('video') === 0) {
         setAdminStatus('جاري تحويل الفيديو إلى صورة متحركة (GIF)...', 'info');

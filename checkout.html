@@ -248,8 +248,14 @@
         function changeQty(productId, sizeIdx, delta) {
             var item = cart.find(function (entry) { return entry.id === productId && entry.sizeIdx === sizeIdx; });
             if (!item || item.type === 'custom_package') return;
-            item.qty += delta;
-            if (item.qty < 1) return removeItem(productId, sizeIdx);
+            var newQty = item.qty + delta;
+            if (newQty < 1) return removeItem(productId, sizeIdx);
+            var product = products.find(function (entry) { return entry.id === productId; });
+            if (product && typeof getSizeStock === 'function') {
+                var stock = getSizeStock(product, sizeIdx);
+                if (stock !== null && newQty > stock) { newQty = stock; if (typeof alert === 'function') alert('الكمية المتوفرة لهذا الحجم: ' + stock); }
+            }
+            item.qty = newQty;
             saveCart();
             render();
         }

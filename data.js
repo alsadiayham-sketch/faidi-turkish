@@ -21,12 +21,17 @@ var BRANDS_DATA = [
 ];
 
 function normalizeSizeEntry(entry) {
-    if (!entry) return { size: '-', unit: 'cm', price: 0 };
+    if (!entry) return { size: '-', unit: 'cm', price: 0, stock: null };
     var unit = entry.unit || 'cm';
+    var stock = null;
+    if (entry.stock !== undefined && entry.stock !== null && entry.stock !== '') {
+        stock = Math.max(0, parseInt(entry.stock, 10) || 0);
+    }
     return {
         size: String(entry.size || '-').trim() || '-',
         unit: unit,
-        price: Number(entry.price) || 0
+        price: Number(entry.price) || 0,
+        stock: stock
     };
 }
 
@@ -43,6 +48,7 @@ function normalizeProduct(product) {
         sizes: sizes.filter(function (size) { return size.size && size.price >= 0; }),
         discount: Number(product && product.discount) || 0,
         image: (product && product.image) || '',
+        poster: (product && product.poster) || '',
         status: (product && product.status) || 'normal'
     };
 }
@@ -98,9 +104,44 @@ function normalizeSettings(settings) {
 }
 
 function getSizeData(product, sizeIdx) {
-    if (!product || !Array.isArray(product.sizes) || !product.sizes.length) return { size: '-', unit: '', price: product ? product.price || 0 : 0 };
+    if (!product || !Array.isArray(product.sizes) || !product.sizes.length) return { size: '-', unit: '', price: product ? product.price || 0 : 0, stock: null };
     var safeIndex = Math.max(0, Math.min(Number(sizeIdx) || 0, product.sizes.length - 1));
     return product.sizes[safeIndex];
+}
+
+// Inventory helpers. stock === null means untracked/unlimited.
+function getSizeStock(product, sizeIdx) {
+    var s = getSizeData(product, sizeIdx);
+    return (s && s.stock !== undefined) ? s.stock : null;
+}
+
+function isSizeAvailable(product, sizeIdx) {
+    var stock = getSizeStock(product, sizeIdx);
+    return stock === null || stock > 0;
+}
+
+function isProductSoldOut(product) {
+    if (!product) return true;
+    if (product.status === 'soldout') return true;
+    if (!Array.isArray(product.sizes) || !product.sizes.length) return false;
+    var anyAvailable = product.sizes.some(function (s) { return s.stock === null || s.stock > 0; });
+    return !anyAvailable;
+}
+
+function getFirstAvailableSizeIdx(product) {
+    if (!product || !Array.isArray(product.sizes)) return 0;
+    for (var i = 0; i < product.sizes.length; i++) {
+        var st = product.sizes[i].stock;
+        if (st === null || st > 0) return i;
+    }
+    return 0;
+}
+
+// Max quantity a user can add for a size, given qty already in cart.
+function getMaxQty(product, sizeIdx, alreadyInCart) {
+    var stock = getSizeStock(product, sizeIdx);
+    if (stock === null) return Infinity;
+    return Math.max(0, stock - (Number(alreadyInCart) || 0));
 }
 
 function getUnitLabel(unit) {

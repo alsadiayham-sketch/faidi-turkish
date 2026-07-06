@@ -190,7 +190,8 @@
                     <div class="form-group"><label>الفئة</label><input type="text" id="productCategory" required list="categoriesList"><datalist id="categoriesList"></datalist></div>
                     <div class="form-group"><label>خصم (%)</label><input type="number" id="productDiscount" value="0" min="0" max="99"></div>
                 </div>
-                <div class="form-group"><label>الأحجام والأسعار</label><div id="sizesContainer" class="sizes-container"></div><button type="button" class="btn-add-size" onclick="addSizeRow()">+ إضافة حجم</button></div>
+                <div class="form-group"><label>الأحجام والأسعار والمخزون</label><small style="color:#999;display:block;margin:0 0 6px;">اتركي خانة المخزون فارغة لكمية غير محدودة.</small><div id="sizesContainer" class="sizes-container"></div><button type="button" class="btn-add-size" onclick="addSizeRow()">+ إضافة حجم</button></div>
+                <input type="hidden" id="productPoster" value="">
                 <div class="form-group"><label>صورة المنتج</label>
                     <div class="image-upload-group">
                         <input type="file" id="productImageFile" accept="image/*,video/*" onchange="previewImage(this)">
