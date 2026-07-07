@@ -270,8 +270,7 @@ function renderProducts(productsToShow) {
             }).join('') + '</select></div>'
             : '<div class="card-size-single"><span>الحجم:</span><strong>' + getSizeLabel(sizeData) + '</strong></div>';
 
-        var posterSrc = product.poster || product.image;
-        var gifAttr = product.poster ? ' data-gif="' + product.image + '" data-poster="' + product.poster + '"' : '';
+        var posterSrc = product.image || product.poster;
 
         var card = document.createElement('div');
         card.className = 'product-card ' + soldOutClass;
@@ -280,7 +279,7 @@ function renderProducts(productsToShow) {
             discountBadge,
             statusBadge,
             '<div class="product-image" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
-            '<img class="product-media" src="' + posterSrc + '"' + gifAttr + ' alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
+            '<img class="product-media" src="' + posterSrc + '" alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
             '</div>',
             '<div class="product-info" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
             '<span class="product-brand">' + product.brand + '</span>',
@@ -1326,6 +1325,19 @@ function startHeroSlideTimer() {
     }, 5000);
 }
 
+function buildPdpMedia(product) {
+    var media = product.video || product.image;
+    var poster = product.image || product.poster || '';
+    if (!media) return '<img src="' + FALLBACK_IMAGE + '" alt="' + product.name + '">';
+    // Real video files play in a <video>; GIFs/images animate on their own in an <img>.
+    if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(media)) {
+        return '<video src="' + media + '" autoplay muted loop playsinline preload="auto"' +
+            (poster ? ' poster="' + poster + '"' : '') +
+            ' onerror="this.outerHTML=\'&lt;img src=&quot;' + (poster || FALLBACK_IMAGE) + '&quot;&gt;\'"></video>';
+    }
+    return '<img src="' + media + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
+}
+
 function openPDP(productId) {
     var product = products.find(function (entry) { return entry.id === productId; });
     if (!product) return;
@@ -1334,7 +1346,7 @@ function openPDP(productId) {
     currentPDPSizeIdx = getFirstAvailableSizeIdx(product);
     pdpQty = 1;
 
-    document.getElementById('pdpImage').innerHTML = '<img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
+    document.getElementById('pdpImage').innerHTML = buildPdpMedia(product);
     document.getElementById('pdpBrand').textContent = product.brand;
     document.getElementById('pdpName').textContent = product.name;
     document.getElementById('pdpQty').textContent = '1';

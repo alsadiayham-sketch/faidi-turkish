@@ -115,7 +115,8 @@ body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-i
 .image-upload-group input[type="url"] { flex: 1; min-width: 150px; }
 .upload-or { font-size: 0.85rem; color: #6b7280; font-weight: 600; }
 .image-preview { margin-top: 10px; }
-.image-preview img { max-width: 120px; max-height: 120px; border-radius: 10px; object-fit: cover; border: 2px solid #f3ead7; }
+.image-preview img,
+.image-preview video { max-width: 120px; max-height: 120px; border-radius: 10px; object-fit: cover; border: 2px solid #f3ead7; }
 /* Checkbox list for discounts */
 .checkbox-list {
     display: flex;

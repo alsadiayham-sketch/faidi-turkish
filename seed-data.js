@@ -95,7 +95,12 @@ window.seedFirestoreData = function(clearExisting) {
         product.id = index + 1;
         product.order = index + 1;
         product.inStock = true;
-        product.poster = POSTERS[product.image] || '';
+        // New model: image = static first-frame picture (home page), video = animated reel (PDP).
+        var animated = product.image;
+        var poster = POSTERS[animated] || '';
+        product.video = animated;
+        product.image = poster || animated;
+        product.poster = poster || animated;
         if (!Array.isArray(product.sizes) || !product.sizes.length) {
             product.sizes = [{ size: '-', unit: '', price: product.price || 0 }];
         }

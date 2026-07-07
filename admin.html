@@ -192,14 +192,23 @@
                 </div>
                 <div class="form-group"><label>الأحجام والأسعار والمخزون</label><small style="color:#999;display:block;margin:0 0 6px;">اتركي خانة المخزون فارغة لكمية غير محدودة.</small><div id="sizesContainer" class="sizes-container"></div><button type="button" class="btn-add-size" onclick="addSizeRow()">+ إضافة حجم</button></div>
                 <input type="hidden" id="productPoster" value="">
-                <div class="form-group"><label>صورة المنتج</label>
+                <div class="form-group"><label>صورة المنتج (تظهر في الصفحة الرئيسية)</label>
                     <div class="image-upload-group">
-                        <input type="file" id="productImageFile" accept="image/*,video/*" onchange="previewImage(this)">
+                        <input type="file" id="productImageFile" accept="image/*" onchange="previewImage(this)">
                         <span class="upload-or">أو</span>
                         <input type="url" id="productImage" placeholder="رابط الصورة https://...">
                     </div>
-                    <small style="color:#999;display:block;margin-top:6px;">يمكنك رفع صورة أو فيديو (سيُحوَّل الفيديو تلقائياً إلى صورة متحركة GIF) أو لصق رابط مباشر.</small>
+                    <small style="color:#999;display:block;margin-top:6px;">صورة ثابتة تظهر في بطاقة المنتج. إن لم تُضِفيها ستُؤخذ تلقائياً من أول لقطة من الفيديو.</small>
                     <div id="imagePreview" class="image-preview"></div>
+                </div>
+                <div class="form-group"><label>فيديو المنتج (يعمل عند فتح صفحة التفاصيل)</label>
+                    <div class="image-upload-group">
+                        <input type="file" id="productVideoFile" accept="video/*,image/gif" onchange="previewVideo(this)">
+                        <span class="upload-or">أو</span>
+                        <input type="url" id="productVideo" placeholder="رابط الفيديو / GIF https://...">
+                    </div>
+                    <small style="color:#999;display:block;margin-top:6px;">يُحوَّل الفيديو تلقائياً إلى صورة متحركة (GIF) ويظهر متحركاً في صفحة تفاصيل المنتج.</small>
+                    <div id="videoPreview" class="image-preview"></div>
                 </div>
                 <div class="form-group"><label>الحالة</label><select id="productStatus"><option value="normal">عادي</option><option value="bestseller">الأكثر مبيعاً</option><option value="special">مميز</option><option value="soldout">نفذت الكمية</option></select></div>
                 <div class="modal-actions"><button type="submit" class="btn-save">حفظ</button><button type="button" class="btn-cancel" onclick="closeModal('productModal')">إلغاء</button></div>

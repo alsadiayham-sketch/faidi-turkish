@@ -446,9 +446,12 @@ function openProductModal(product) {
     document.getElementById('productCategory').value = product ? product.category : '';
     document.getElementById('productDiscount').value = product ? product.discount : 0;
     document.getElementById('productImage').value = product ? product.image : '';
+    document.getElementById('productVideo').value = product ? (product.video || '') : '';
     document.getElementById('productPoster').value = product ? (product.poster || '') : '';
     document.getElementById('productImageFile').value = '';
+    document.getElementById('productVideoFile').value = '';
     document.getElementById('imagePreview').innerHTML = product && product.image ? '<img src="' + product.image + '" onerror="this.style.display=\'none\'">' : '';
+    document.getElementById('videoPreview').innerHTML = product && product.video ? mediaPreviewHTML(product.video) : '';
     document.getElementById('productStatus').value = product ? product.status : 'normal';
     renderSizeRows(product ? product.sizes : [createEmptySize()]);
     document.getElementById('brandsList').innerHTML = Array.from(new Set(products.map(function (entry) { return entry.brand; }))).map(function (brand) { return '<option value="' + brand + '">'; }).join('');
@@ -482,24 +485,39 @@ async function saveProduct(event) {
 
     var nextId = id ? id : 'product_' + Date.now();
 
-    // Handle image upload
+    // Media: a static picture (home page) + an optional animated video/GIF (product details page).
     var imageUrl = document.getElementById('productImage').value.trim();
+    var videoUrl = document.getElementById('productVideo').value.trim();
     var posterUrl = document.getElementById('productPoster').value.trim();
-    var fileInput = document.getElementById('productImageFile');
-    if (fileInput.files && fileInput.files[0]) {
+    var imageFile = document.getElementById('productImageFile');
+    var videoFile = document.getElementById('productVideoFile');
+
+    if ((videoFile.files && videoFile.files[0]) || (imageFile.files && imageFile.files[0]) || (videoUrl && !imageUrl)) {
         setAdminLoading(true);
-        setAdminStatus('جاري معالجة الوسائط...', 'info');
-        imageUrl = await uploadProductMedia(fileInput.files[0], nextId);
-        // Generate a static first-frame poster so the storefront loads fast (no stutter).
-        try {
-            setAdminStatus('جاري إنشاء صورة المعاينة...', 'info');
-            posterUrl = await generatePosterFromUrl(imageUrl, nextId + '_poster');
-        } catch (e) { posterUrl = ''; }
-    } else if (imageUrl && !posterUrl) {
-        // Manual image URL without a poster: try to build one (best-effort).
-        try { posterUrl = await generatePosterFromUrl(imageUrl, nextId + '_poster'); }
-        catch (e) { posterUrl = ''; }
     }
+
+    // Video: convert an uploaded video to a GIF (or upload a GIF/animation as-is).
+    if (videoFile.files && videoFile.files[0]) {
+        setAdminStatus('جاري معالجة الفيديو...', 'info');
+        videoUrl = await uploadProductMedia(videoFile.files[0], nextId + '_video');
+    }
+
+    // Picture: upload the still image if a file was chosen.
+    if (imageFile.files && imageFile.files[0]) {
+        setAdminStatus('جاري رفع الصورة...', 'info');
+        imageUrl = await uploadProductImage(imageFile.files[0], nextId + '_img');
+    }
+
+    // No picture provided but we have a video/GIF: use its first frame as the picture.
+    if (!imageUrl && videoUrl) {
+        try {
+            setAdminStatus('جاري إنشاء صورة من الفيديو...', 'info');
+            imageUrl = await generatePosterFromUrl(videoUrl, nextId + '_frame');
+        } catch (e) { imageUrl = videoUrl; }
+    }
+    posterUrl = imageUrl || posterUrl;
+
+    if (!imageUrl) return alert('أضيفي صورة للمنتج أو فيديو لاستخراج صورة منه.');
 
     var productData = normalizeProduct({
         id: nextId,
@@ -509,6 +527,7 @@ async function saveProduct(event) {
         sizes: sizes,
         discount: parseInt(document.getElementById('productDiscount').value || '0', 10) || 0,
         image: imageUrl,
+        video: videoUrl,
         poster: posterUrl,
         status: document.getElementById('productStatus').value
     });
@@ -864,6 +883,27 @@ function previewImage(input) {
         reader.readAsDataURL(input.files[0]);
         // Clear URL input when file is selected
         document.getElementById('productImage').value = '';
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+function mediaPreviewHTML(url) {
+    if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(url)) {
+        return '<video src="' + url + '" muted autoplay loop playsinline></video>';
+    }
+    return '<img src="' + url + '" onerror="this.style.display=\'none\'">';
+}
+
+function previewVideo(input) {
+    var preview = document.getElementById('videoPreview');
+    if (input.files && input.files[0]) {
+        var url = URL.createObjectURL(input.files[0]);
+        var isVideo = input.files[0].type && input.files[0].type.indexOf('video') === 0;
+        preview.innerHTML = isVideo
+            ? '<video src="' + url + '" muted autoplay loop playsinline></video>'
+            : '<img src="' + url + '">';
+        document.getElementById('productVideo').value = '';
     } else {
         preview.innerHTML = '';
     }

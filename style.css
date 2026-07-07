@@ -732,7 +732,8 @@ html[dir="rtl"] .pdp-close { right: auto; left: 16px; }
 .pdp-content { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
 .pdp-image { aspect-ratio: 9 / 16; overflow: hidden; background: var(--bg-alt); }
 html[dir="rtl"] .pdp-image { border-radius: 0; }
-.pdp-image img { width: 100%; height: 100%; object-fit: cover; }
+.pdp-image img,
+.pdp-image video { width: 100%; height: 100%; object-fit: cover; }
 .pdp-info { padding: 44px 38px; }
 .pdp-info h2 { font-family: var(--serif); font-size: 1.9rem; color: var(--primary); margin: 8px 0 14px; line-height: 1.4; }
 .pdp-meta { display: flex; gap: 14px; color: var(--text-light); font-size: 0.9rem; margin-bottom: 18px; }

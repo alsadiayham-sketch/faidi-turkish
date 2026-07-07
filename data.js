@@ -48,6 +48,7 @@ function normalizeProduct(product) {
         sizes: sizes.filter(function (size) { return size.size && size.price >= 0; }),
         discount: Number(product && product.discount) || 0,
         image: (product && product.image) || '',
+        video: (product && product.video) || '',
         poster: (product && product.poster) || '',
         status: (product && product.status) || 'normal'
     };
