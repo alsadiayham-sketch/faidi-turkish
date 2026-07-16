@@ -51,7 +51,7 @@
     <div class="confirmation-page">
         <div class="confirmation-card">
             <div class="success-icon">✓</div>
-            <h1>تم تأكيد طلبك بنجاح</h1>
+            <h1>انتأكد طلبك تمام</h1>
             <div class="order-id-row">
                 <span class="order-id" id="orderId"></span>
                 <button type="button" class="btn-copy-order" id="copyOrderBtn" onclick="copyOrderId()">نسخ الرقم</button>
@@ -66,10 +66,10 @@
                 </div>
                 <div class="order-info" id="orderInfo"></div>
             </div>
-            <p style="color: var(--text-light); font-size: 0.9rem;">سيتم التواصل معك قريباً لتأكيد الطلب</p>
+            <p style="color: var(--text-light); font-size: 0.9rem;">رح نتواصل معك قريب لنأكّد الطلب</p>
             <div class="confirmation-actions">
                 <a href="#" class="btn-whatsapp-confirm" id="whatsappConfirmBtn">إرسال الطلب عبر واتساب</a>
-                <a href="index.html" class="btn-continue">متابعة التسوق</a>
+                <a href="index.html" class="btn-continue">كمّلي تسوّق</a>
             </div>
         </div>
     </div>
@@ -83,7 +83,7 @@
             if (!currentOrderId) return;
             var btn = document.getElementById('copyOrderBtn');
             var done = function () {
-                btn.textContent = 'تم النسخ ✓';
+                btn.textContent = 'اننسخ ✓';
                 btn.classList.add('copied');
                 setTimeout(function () { btn.textContent = 'نسخ الرقم'; btn.classList.remove('copied'); }, 2000);
             };
@@ -158,7 +158,7 @@
                 return (index + 1) + '. ' + item.name + ' (' + item.sizeLabel + ')\n   السعر: ' + item.price + ' شيكل × ' + item.qty + ' = ' + item.lineTotal + ' شيكل';
             }).join('\n');
             var deliveryText = order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل إلى: ' + order.address;
-            var message = 'مرحبا، هذا تأكيد للطلب رقم ' + order.id + ':\n';
+            var message = 'مرحبا، هاد تأكيد للطلب رقم ' + order.id + ':\n';
             message += 'ـــــــــــــــــــــــــــ\n';
             message += itemsText + '\n';
             message += 'ـــــــــــــــــــــــــــ\n';

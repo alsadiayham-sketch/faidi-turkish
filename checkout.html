@@ -88,7 +88,7 @@
         <div class="checkout-container">
             <a href="index.html" class="back-link">→ العودة للتسوق</a>
             <h1 class="checkout-title">إتمام الطلب</h1>
-            <p class="checkout-status" id="checkoutStatus">جاري تحميل بيانات الطلب...</p>
+            <p class="checkout-status" id="checkoutStatus">عم نحمّل تفاصيل الطلب...</p>
             <div id="checkoutContent"></div>
         </div>
     </div>
@@ -172,7 +172,7 @@
         function render() {
             var container = document.getElementById('checkoutContent');
             if (cart.length === 0) {
-                container.innerHTML = '<div class="empty-checkout"><span>•</span><p>السلة فارغة! أضيفي منتجات أولاً</p><a href="index.html">تسوقي الآن</a></div>';
+                container.innerHTML = '<div class="empty-checkout"><span>•</span><p>السلة فاضية! ضيفي منتجات الأول</p><a href="index.html">تسوّقي هلّق</a></div>';
                 return;
             }
 
@@ -204,8 +204,8 @@
             html += '<div class="checkout-card" style="margin-top:20px;">';
             html += '<h3>طريقة الاستلام</h3>';
             html += '<div class="delivery-options">';
-            html += '<div class="delivery-option ' + (selectedDelivery === 'pickup' ? 'selected' : '') + '" onclick="selectDelivery(\'pickup\')"><div class="radio-dot"></div><div class="delivery-option-info"><h4>استلام ذاتي (مجاني)</h4><p>استلمي طلبك بنفسك بدون تكلفة إضافية</p></div></div>';
-            html += '<div class="delivery-option ' + (selectedDelivery === 'delivery' ? 'selected' : '') + '" onclick="selectDelivery(\'delivery\')"><div class="radio-dot"></div><div class="delivery-option-info"><h4>توصيل للعنوان</h4><p>توصيل لجميع مناطق الضفة، القدس، والداخل</p></div></div>';
+            html += '<div class="delivery-option ' + (selectedDelivery === 'pickup' ? 'selected' : '') + '" onclick="selectDelivery(\'pickup\')"><div class="radio-dot"></div><div class="delivery-option-info"><h4>استلام ذاتي (مجاني)</h4><p>استلمي طلبك بإيدك بدون أي زيادة</p></div></div>';
+            html += '<div class="delivery-option ' + (selectedDelivery === 'delivery' ? 'selected' : '') + '" onclick="selectDelivery(\'delivery\')"><div class="radio-dot"></div><div class="delivery-option-info"><h4>توصيل للعنوان</h4><p>منوصّل لكل مناطق الضفة والقدس والداخل</p></div></div>';
             html += '</div>';
             if (selectedDelivery === 'delivery') {
                 html += '<div class="delivery-regions" style="margin-top:15px;">';
@@ -219,7 +219,7 @@
             html += '</div>';
             html += '<div class="checkout-card" style="margin-top:20px;">';
             html += '<h3>معلومات التواصل</h3>';
-            html += '<div class="form-group"><label>الاسم</label><input type="text" id="custName" placeholder="اسمك الكريم" required></div>';
+            html += '<div class="form-group"><label>الاسم</label><input type="text" id="custName" placeholder="اسمك" required></div>';
             html += '<div class="form-group"><label>رقم الهاتف</label><input type="tel" id="custPhone" placeholder="05xxxxxxxx" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')"></div>';
             html += '<div class="form-group" id="addressGroup" style="' + (selectedDelivery === 'pickup' ? 'display:none' : '') + '"><label>العنوان (المدينة + تفاصيل)</label><textarea id="custAddress" rows="2" placeholder="المدينة، الحي، الشارع..."></textarea></div>';
             html += '<div class="form-group"><label>ملاحظات إضافية (اختياري)</label><textarea id="custNotes" rows="2" placeholder="أي ملاحظات على الطلب..."></textarea></div>';
@@ -432,37 +432,37 @@
             var whatsappUrl = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(order));
             var html = '';
             html += '<div class="checkout-success-card">';
-            html += '<h3>تم حفظ طلبك بنجاح</h3>';
+            html += '<h3>تم حفظ طلبك تمام</h3>';
             html += '<div class="checkout-success-order-id">رقم الطلب: ' + order.id + '</div>';
-            html += '<p>يمكنك الآن إرسال الطلب عبر واتساب بشكل اختياري، أو العودة مباشرة إلى صفحة التأكيد والمتجر.</p>';
+            html += '<p>بتقدري هلّق تبعتي الطلب عالواتساب إذا حابة، أو ترجعي عالمتجر مباشرة.</p>';
             html += '<div class="checkout-success-actions">';
             html += '<a href="' + whatsappUrl + '" target="_blank" rel="noopener" class="btn-success-whatsapp">إرسال عبر واتساب</a>';
-            html += '<button type="button" class="btn-success-back" onclick="window.location.href=\'confirmation.html\'">تم، عودة للمتجر</button>';
+            html += '<button type="button" class="btn-success-back" onclick="window.location.href=\'confirmation.html\'">تمام، رجعيني عالمتجر</button>';
             html += '</div></div>';
             container.innerHTML = html;
-            setStatus('تم حفظ الطلب بنجاح. رقم الطلب: ' + order.id, 'success');
+            setStatus('انحفظ الطلب تمام. رقم الطلب: ' + order.id, 'success');
         }
 
         function confirmOrder() {
             var customerName = document.getElementById('custName').value.trim();
             var customerPhone = document.getElementById('custPhone').value.trim();
-            if (!customerName || !customerPhone) return alert('الرجاء إدخال الاسم ورقم الهاتف');
-            if (customerPhone.length < 9 || customerPhone.length > 14) return alert('رقم الهاتف غير صحيح');
+            if (!customerName || !customerPhone) return alert('لازم تدخّلي الاسم ورقم الهاتف');
+            if (customerPhone.length < 9 || customerPhone.length > 14) return alert('رقم الهاتف مش مظبوط');
             if (selectedDelivery === 'delivery') {
-                if (!selectedRegion) return alert('الرجاء اختيار المنطقة');
+                if (!selectedRegion) return alert('لازم تختاري المنطقة');
                 var address = document.getElementById('custAddress').value.trim();
-                if (!address) return alert('الرجاء إدخال عنوان التوصيل');
+                if (!address) return alert('لازم تدخّلي عنوان التوصيل');
             }
 
             var button = document.getElementById('confirmOrderBtn');
             var originalText = button.textContent;
             button.disabled = true;
-            button.textContent = 'جاري حفظ الطلب...';
-            setStatus('جاري حفظ الطلب...', '');
+            button.textContent = 'عم نحفظ الطلب...';
+            setStatus('عم نحفظ الطلب...', '');
 
             var order = buildOrder();
             if (!window.db) {
-                alert('تعذر الاتصال بقاعدة البيانات حالياً، حاولي مرة أخرى.');
+                alert('ما قدرنا نوصل للبيانات هلّق، جرّبي كمان مرة.');
                 button.disabled = false;
                 button.textContent = originalText;
                 setStatus('');
@@ -475,11 +475,11 @@
                 cart = [];
                 orderJustPlaced = true;
                 var whatsappUrl = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(order));
-                setStatus('تم حفظ الطلب. جاري تحويلك إلى واتساب لإرسال الطلب...', 'success');
+                setStatus('انحفظ الطلب. عم نحوّلك عالواتساب...', 'success');
                 window.location.href = whatsappUrl;
             }).catch(function (error) {
                 console.error(error);
-                alert('تعذر حفظ الطلب حالياً، حاولي مرة أخرى.');
+                alert('ما قدرنا نحفظ الطلب هلّق، جرّبي كمان مرة.');
                 button.disabled = false;
                 button.textContent = originalText;
                 setStatus('');

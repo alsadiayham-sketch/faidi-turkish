@@ -321,7 +321,7 @@ function checkAdminReady() {
 
 function renderProductsTable() {
     var tbody = document.getElementById('productsTableBody');
-    var statusLabels = { normal: 'عادي', bestseller: 'الأكثر مبيعاً', special: 'مميز', soldout: 'نفذت الكمية' };
+    var statusLabels = { normal: 'عادي', bestseller: 'الأكثر مبيعًا', special: 'مميّز', soldout: 'خلصت الكمية' };
     if (!products.length) {
         tbody.innerHTML = '<tr><td colspan="10" class="empty-state">لا توجد منتجات حالياً.</td></tr>';
         return;
@@ -422,7 +422,7 @@ function addSizeRow(sizeData) {
     var container = document.getElementById('sizesContainer');
     var row = document.createElement('div');
     row.className = 'size-row';
-    row.innerHTML = '<input type="text" class="size-value" placeholder="الحجم أو النوع" value="' + safeSize.size + '"><select class="size-unit"><option value="قطعة" ' + (safeSize.unit === 'قطعة' ? 'selected' : '') + '>قطعة</option><option value="ml" ' + (safeSize.unit === 'ml' ? 'selected' : '') + '>مل (ml)</option><option value="g" ' + (safeSize.unit === 'g' ? 'selected' : '') + '>غرام (g)</option></select><input type="number" class="size-price" min="0" placeholder="السعر ₪" value="' + safeSize.price + '"><input type="number" class="size-stock" min="0" placeholder="المخزون" title="اتركيه فارغاً لكمية غير محدودة" value="' + stockVal + '"><button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">حذف</button>';
+    row.innerHTML = '<input type="text" class="size-value" placeholder="الحجم أو النوع" value="' + safeSize.size + '"><select class="size-unit"><option value="قطعة" ' + (safeSize.unit === 'قطعة' ? 'selected' : '') + '>قطعة</option><option value="ml" ' + (safeSize.unit === 'ml' ? 'selected' : '') + '>مل (ml)</option><option value="g" ' + (safeSize.unit === 'g' ? 'selected' : '') + '>غرام (g)</option></select><input type="number" class="size-price" min="0" placeholder="السعر ₪" value="' + safeSize.price + '"><button type="button" class="btn-remove-size" onclick="removeSizeRow(this)">حذف</button>';
     container.appendChild(row);
 }
 
@@ -764,9 +764,6 @@ function renderDashboard() {
         statCard('طلبات هذا الشهر', ordersMonth, 'آخر 30 يوم'),
         statCard('عدد المنتجات', products.length, 'في المتجر'),
         statCard('عدد الخصومات', discounts.length, 'الخصومات النشطة'),
-        statCard('إجمالي المخزون', totalStock, trackedSizes + ' حجم متتبَّع'),
-        statCard('مخزون منخفض', lowSizes, '5 قطع أو أقل'),
-        statCard('نفذت الكمية', outSizes, 'أحجام مطلوب تعبئتها'),
         statCard('منتجات نافذة', soldOutProducts, 'غير متاحة للبيع')
     ].join('');
 

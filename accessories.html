@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إكسسوارات | فايدي تركش</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=El+Messiri:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.png">
+</head>
+<body>
+    <div class="bg-3d" id="bg3d" aria-hidden="true">
+        <span class="bg-layer" data-depth="0.02"><span class="bg-orb bg-orb-1"></span></span>
+        <span class="bg-layer" data-depth="0.05"><span class="bg-orb bg-orb-2"></span></span>
+        <span class="bg-layer" data-depth="0.035"><span class="bg-ring bg-ring-1"></span></span>
+        <span class="bg-layer" data-depth="0.06"><span class="bg-shard bg-shard-1"></span></span>
+        <span class="bg-glow" id="bgGlow"></span>
+    </div>
+
+    <div class="discount-banner" id="discountBanner" style="display:none;">
+        <div class="banner-scroll"><span id="bannerText"></span></div>
+    </div>
+
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <img src="logo.png" alt="Faidi Turkish" class="logo-img" id="logoImg">
+                <span id="logoText" class="logo-text">Faidi Turkish</span>
+            </a>
+            <div class="nav-search">
+                <input type="text" id="navSearchInput" placeholder="دوّري على قطعة..." autocomplete="off">
+                <div class="search-dropdown" id="navSearchDropdown"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="dresses.html" >فساتين</a></li>
+                <li><a href="clothes.html" >أطقم وملابس</a></li>
+                <li><a href="accessories.html" style="color:var(--gold-deep);font-weight:700;">إكسسوارات</a></li>
+                <li><a href="index.html#order-tracking">تتبّعي طلبك</a></li>
+            </ul>
+            <div class="cart-icon" id="cartIcon" onclick="toggleCart()">
+                🛒
+                <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">الرئيسية</a>
+        <a href="dresses.html">فساتين</a>
+        <a href="clothes.html">أطقم وملابس</a>
+        <a href="accessories.html">إكسسوارات</a>
+        <a href="index.html#order-tracking">تتبّعي طلبك</a>
+    </div>
+
+    <section class="catalog-hero">
+        <div class="container">
+            <div class="catalog-hero-card">
+                <span class="pill-label"><span class="dot"></span>Accessories</span>
+                <h1>إكسسوارات تكمّل ستايلك</h1>
+                <p>تفاصيل صغيرة بتفرق كتير — اختاري الإكسسوار اللي بيميّزك.</p>
+            </div>
+            <div class="catalog-toolbar">
+                <div class="filter-chips" id="catalogChips"></div>
+                <div class="catalog-search products-search">
+                    <input type="text" id="productsSearchInput" placeholder="دوّري بهالقسم..." autocomplete="off">
+                    <div class="search-dropdown" id="productsSearchDropdown"></div>
+                </div>
+            </div>
+            <div style="margin-top:12px;"><span class="results-count" id="resultsCount">0 قطعة</span></div>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <div class="container products-shell">
+            <div class="store-loading" id="storeLoading"><div class="spinner"></div><p>عم نجهّزلك التشكيلة...</p></div>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+    </section>
+
+    <div class="modal-overlay pdp-overlay" id="pdpModal" style="display:none;" onclick="closePDP(event)">
+        <div class="pdp-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closePDP()">✕</button>
+            <div class="pdp-content">
+                <div class="pdp-image" id="pdpImage"></div>
+                <div class="pdp-info">
+                    <span class="product-brand" id="pdpBrand"></span>
+                    <h2 id="pdpName"></h2>
+                    <div class="pdp-meta" id="pdpMeta"></div>
+                    <div class="pdp-size-section" id="pdpSizeSection" style="display:none;">
+                        <label>الحجم:</label>
+                        <div class="pdp-size-options" id="pdpSizes"></div>
+                    </div>
+                    <div class="pdp-price" id="pdpPrice"></div>
+                    <div class="pdp-stock" id="pdpStock" style="display:none;"></div>
+                    <div class="pdp-qty">
+                        <label>الكمية:</label>
+                        <div class="qty-selector">
+                            <button onclick="changePDPQty(-1)">−</button>
+                            <span id="pdpQty">1</span>
+                            <button onclick="changePDPQty(1)">+</button>
+                        </div>
+                    </div>
+                    <button class="btn-add-cart pdp-add-btn" id="pdpAddBtn" onclick="addFromPDP()">حطّيها بالسلة</button>
+                </div>
+            </div>
+            <div class="pdp-related" id="pdpRelated" style="display:none;">
+                <h3>قطع بتشبهها</h3>
+                <div class="pdp-related-grid" id="pdpRelatedGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>سلة التسوّق</h3>
+            <button class="cart-close" onclick="toggleCart()">✕</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty"><span>•</span><p>السلة فاضية</p></div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display:none;">
+            <div class="cart-total"><span>المجموع:</span><span id="cartTotal">₪0</span></div>
+            <a href="checkout.html" class="btn-checkout" id="checkoutBtn">أكملي الطلب</a>
+            <button class="btn-clear-cart" onclick="clearCart()">فضّي السلة</button>
+        </div>
+    </div>
+
+    <div id="flyingProduct" class="flying-product" style="display:none;"></div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 Faidi Turkish — فايدي تركش. كل الحقوق محفوظة</p>
+        </div>
+    </footer>
+
+    <script src="firebase-config.js"></script>
+    <script src="data.js"></script>
+    <script>window.PAGE_GROUP = { key: "accessories", categories: ["إكسسوارات"], title: "إكسسوارات" };</script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -4,26 +4,33 @@
    ===================================================================== */
 
 :root {
-    --primary: #1c1014;
-    --primary-light: #2e1a22;
-    --primary-lighter: #fbe3f0;
-    --primary-dark: #120a0d;
-    --gold: #e11d8f;
-    --gold-soft: #ff9ad4;
-    --gold-deep: #a8146e;
-    --accent: #e11d8f;
-    --accent-dark: #a8146e;
-    --blush: #d94fa0;
-    --bg: #fdf5f9;
-    --bg-alt: #f7e8f0;
-    --card: #fffbfd;
-    --text: #241017;
-    --text-light: #9a8590;
-    --line: #f0d7e5;
+    /* Luxury champagne · rose-gold · deep plum — Faidi Turkish */
+    --primary: #2a1620;
+    --primary-light: #3d2130;
+    --primary-lighter: #f6e7d5;
+    --primary-dark: #1b0d15;
+    --gold: #c4a15e;
+    --gold-soft: #e7cd97;
+    --gold-deep: #9a7635;
+    --accent: #c4a15e;
+    --accent-dark: #9a7635;
+    --blush: #d05f97;
+    --rose: #d6337f;
+    --bg: #faf5ec;
+    --bg-alt: #f2e8d9;
+    --card: #fffdf8;
+    --text: #2c1a22;
+    --text-light: #93817b;
+    --line: #ecdfc9;
     --white: #ffffff;
-    --shadow: 0 14px 40px rgba(120, 20, 80, 0.08);
-    --shadow-hover: 0 26px 60px rgba(120, 20, 80, 0.18);
-    --radius: 14px;
+    --glass: rgba(255, 253, 248, 0.72);
+    --glass-strong: rgba(255, 253, 248, 0.9);
+    --shadow: 0 18px 50px rgba(120, 84, 30, 0.12);
+    --shadow-soft: 0 10px 30px rgba(120, 84, 30, 0.08);
+    --shadow-hover: 0 30px 70px rgba(120, 84, 30, 0.2);
+    --radius: 20px;
+    --radius-lg: 30px;
+    --radius-xl: 40px;
     --transition: all 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
     --serif: 'Playfair Display', 'El Messiri', serif;
     --display: 'El Messiri', 'Playfair Display', serif;
@@ -42,7 +49,7 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* subtle paper texture wash */
+/* luxurious champagne mesh wash */
 body::before {
     content: "";
     position: fixed;
@@ -50,8 +57,10 @@ body::before {
     pointer-events: none;
     z-index: -1;
     background:
-        radial-gradient(circle at 12% 18%, rgba(184, 148, 90, 0.06), transparent 40%),
-        radial-gradient(circle at 88% 8%, rgba(185, 142, 135, 0.05), transparent 35%);
+        radial-gradient(circle at 0% 0%, rgba(231, 205, 151, 0.28), transparent 34%),
+        radial-gradient(circle at 100% 8%, rgba(208, 95, 151, 0.12), transparent 32%),
+        radial-gradient(circle at 22% 100%, rgba(196, 161, 94, 0.18), transparent 34%),
+        linear-gradient(180deg, #fdf9f1 0%, #faf5ec 100%);
 }
 
 ::selection { background: var(--gold); color: #fff; }
@@ -1221,4 +1230,135 @@ html[dir="rtl"] .cart-sidebar { right: 0; }
 @media (max-width: 600px) {
     .bg-shard { display: none; }
     .bg-ring-2 { display: none; }
+}
+
+/* =====================================================================
+   LUXURY LAYER — champagne · rose-gold · plum glass (aqqad-inspired)
+   Overrides + new multi-page landing/catalog components.
+   ===================================================================== */
+
+/* ---- utility ---- */
+.pill-label { display:inline-flex; align-items:center; gap:10px; padding:9px 18px; border-radius:999px;
+    background:var(--glass); backdrop-filter:blur(10px); border:1px solid rgba(196,161,94,0.28);
+    font-family:var(--display); font-weight:600; color:var(--gold-deep); letter-spacing:1px; font-size:0.9rem; }
+.pill-label .dot { width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--rose)); }
+.pill-label.on-dark { color:#f6e7d5; border-color:rgba(231,205,151,0.45); background:rgba(255,255,255,0.12); }
+.gradient-text { background:linear-gradient(120deg,#9a7635 0%,#e7cd97 40%,#d6337f 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+.eyebrow { display:block; font-family:var(--display); letter-spacing:4px; text-transform:uppercase;
+    font-size:0.8rem; color:var(--gold-deep); margin-bottom:10px; }
+.glass { background:var(--glass); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.7); box-shadow:var(--shadow); }
+
+/* ---- navbar polish ---- */
+.navbar { background:rgba(250,245,236,0.78); border-bottom:1px solid rgba(196,161,94,0.22); }
+.navbar.scrolled { background:rgba(250,245,236,0.96); box-shadow:0 10px 34px rgba(120,84,30,0.1); }
+.nav-links a { position:relative; font-weight:500; letter-spacing:0.5px; transition:var(--transition); }
+.nav-links a:hover { color:var(--gold-deep); }
+.nav-links a::after { content:''; position:absolute; right:0; bottom:-4px; width:0; height:1.5px;
+    background:linear-gradient(90deg,var(--gold),var(--rose)); transition:width .4s ease; }
+.nav-links a:hover::after { width:100%; }
+.cart-icon { position:relative; }
+.logo-badge, .logo-img { border-color:rgba(196,161,94,0.7); background:#160b12; }
+
+/* ---- section titles ---- */
+.section-title { font-family:var(--display); font-weight:700; letter-spacing:1px; }
+.section-title::after { background:linear-gradient(90deg,var(--gold),var(--rose)); height:2px; }
+.section-subtitle { color:var(--text-light); }
+
+/* ---- buttons: gold luxury ---- */
+.btn-primary { background:linear-gradient(135deg,#c4a15e 0%,#9a7635 100%); color:#fff; border:none;
+    border-radius:999px; padding:14px 34px; font-weight:600; letter-spacing:1px; box-shadow:0 14px 30px rgba(154,118,53,0.28); }
+.btn-primary::before { display:none; }
+.btn-primary:hover { transform:translateY(-3px); box-shadow:0 20px 44px rgba(154,118,53,0.36); color:#fff; }
+.btn-ghost { display:inline-flex; align-items:center; gap:8px; padding:13px 30px; border-radius:999px;
+    border:1px solid rgba(196,161,94,0.5); color:var(--gold-deep); background:transparent; font-weight:600;
+    letter-spacing:1px; transition:var(--transition); }
+.btn-ghost:hover { background:var(--glass); transform:translateY(-3px); }
+.btn-ghost.on-dark { color:#f6e7d5; border-color:rgba(231,205,151,0.55); }
+.btn-ghost.on-dark:hover { background:rgba(255,255,255,0.12); }
+
+/* ---- hero luxury ---- */
+.hero { min-height:88vh; border-radius:0 0 var(--radius-xl) var(--radius-xl); overflow:hidden; }
+.hero-overlay { background:linear-gradient(105deg, rgba(27,13,21,0.82) 0%, rgba(42,22,32,0.5) 45%, rgba(42,22,32,0.15) 100%); }
+.hero-content { align-items:flex-start; text-align:right; max-width:860px; }
+.hero-content h1, .hero-content h2 { font-family:var(--display); font-size:clamp(2.6rem,5.5vw,4.6rem); line-height:1.08; }
+.hero-eyebrow { margin-bottom:16px; }
+.hero-cta { display:flex; gap:14px; flex-wrap:wrap; margin-top:26px; }
+.hero-stats { display:flex; gap:16px; flex-wrap:wrap; margin-top:34px; }
+.hero-stat { padding:16px 22px; border-radius:22px; background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(12px); border:1px solid rgba(231,205,151,0.28); min-width:120px; }
+.hero-stat strong { display:block; font-family:var(--display); font-size:1.7rem; color:#f6e7d5; }
+.hero-stat span { color:rgba(246,231,213,0.82); font-size:0.86rem; letter-spacing:0.5px; }
+
+/* ---- category cards (link to pages) ---- */
+.cat-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:26px; margin-top:34px; }
+.cat-card { position:relative; display:block; height:420px; border-radius:var(--radius-lg); overflow:hidden;
+    box-shadow:var(--shadow); transition:var(--transition); }
+.cat-card img { width:100%; height:100%; object-fit:cover; transition:transform 1s cubic-bezier(0.22,0.61,0.36,1); }
+.cat-card:hover { transform:translateY(-8px); box-shadow:var(--shadow-hover); }
+.cat-card:hover img { transform:scale(1.09); }
+.cat-card-overlay { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end;
+    padding:30px; background:linear-gradient(to top, rgba(20,10,16,0.82) 0%, rgba(20,10,16,0.2) 55%, transparent 100%); }
+.cat-card-overlay .eyebrow { color:var(--gold-soft); }
+.cat-card-overlay h3 { font-family:var(--display); font-size:1.9rem; color:#fff; margin-bottom:6px; }
+.cat-card-overlay span.go { display:inline-flex; align-items:center; gap:8px; color:var(--gold-soft);
+    font-weight:600; letter-spacing:1px; }
+.cat-card:hover .go { gap:14px; }
+
+/* ---- featured head ---- */
+.featured-head { display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px; margin-bottom:8px; }
+
+/* ---- product card luxury ---- */
+.product-card { border-radius:var(--radius-lg); border:1px solid rgba(196,161,94,0.18); background:var(--card);
+    box-shadow:var(--shadow-soft); }
+.product-card:hover { border-color:rgba(196,161,94,0.5); box-shadow:var(--shadow-hover); }
+.product-image { border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+.product-info h3 { font-family:var(--display); font-weight:600; }
+.product-brand { color:var(--gold-deep); letter-spacing:1px; font-size:0.82rem; text-transform:uppercase; }
+.product-price span:last-child { font-family:var(--display); color:var(--gold-deep); font-weight:700; }
+.product-price .original-price { color:var(--text-light); text-decoration:line-through; margin-inline-end:8px; font-size:0.85em; }
+.discount-badge { background:linear-gradient(135deg,var(--rose),var(--blush)) !important; color:#fff; border-radius:999px !important; padding:5px 12px; }
+.btn-add-cart { background:linear-gradient(135deg,#c4a15e,#9a7635); color:#fff; border:none; border-radius:999px;
+    font-weight:600; letter-spacing:0.5px; transition:var(--transition); }
+.btn-add-cart:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 10px 22px rgba(154,118,53,0.3); }
+
+/* ---- story / instagram glass cards ---- */
+.story-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; margin-top:24px; }
+.story-card { padding:34px; border-radius:var(--radius-lg); background:var(--glass); backdrop-filter:blur(16px);
+    border:1px solid rgba(196,161,94,0.22); box-shadow:var(--shadow-soft); }
+.story-card h3 { font-family:var(--display); color:var(--gold-deep); font-size:1.5rem; margin-bottom:12px; }
+.story-card p { color:var(--text); }
+
+/* ---- catalog page (category pages) ---- */
+.catalog-hero { padding:150px 0 40px; }
+.catalog-hero-card { padding:44px; border-radius:var(--radius-xl); background:var(--glass); backdrop-filter:blur(18px);
+    border:1px solid rgba(196,161,94,0.24); box-shadow:var(--shadow); position:relative; overflow:hidden; }
+.catalog-hero-card h1 { font-family:var(--display); font-size:clamp(2.2rem,5vw,3.6rem); margin:14px 0 10px; }
+.catalog-hero-card p { color:var(--text-light); max-width:640px; }
+.catalog-toolbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin:34px 0 8px; }
+.filter-chips { display:flex; gap:10px; flex-wrap:wrap; }
+.filter-chip { border:none; padding:11px 20px; border-radius:999px; background:var(--glass);
+    border:1px solid rgba(196,161,94,0.2); color:var(--text-light); font-weight:600; font-family:inherit;
+    letter-spacing:0.5px; cursor:pointer; transition:var(--transition); }
+.filter-chip.active, .filter-chip:hover { background:linear-gradient(135deg,#c4a15e,#9a7635); color:#fff; border-color:transparent; }
+.results-count { font-family:var(--display); color:var(--gold-deep); font-weight:600; }
+.catalog-search { position:relative; min-width:240px; }
+
+/* ---- cart / pdp luxury accents ---- */
+.cart-sidebar { background:var(--card); }
+.cart-header h3, .pdp-info h2 { font-family:var(--display); }
+.btn-checkout { background:linear-gradient(135deg,#c4a15e,#9a7635) !important; border-radius:999px !important;
+    font-weight:600; letter-spacing:1px; }
+.pdp-add-btn { border-radius:999px; }
+
+/* ---- footer luxury ---- */
+.footer { background:linear-gradient(180deg,#1b0d15,#2a1620); color:#e7cd97; border-top:1px solid rgba(196,161,94,0.25); }
+.footer p { color:#d9c4a2; }
+
+/* ---- responsive ---- */
+@media (max-width: 768px) {
+    .hero-content { text-align:center; align-items:center; }
+    .cat-card { height:340px; }
+    .catalog-hero { padding:120px 0 26px; }
+    .catalog-toolbar { justify-content:center; }
 }

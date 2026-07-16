@@ -4,8 +4,8 @@ var DEFAULT_DISCOUNTS = [];
 
 var DEFAULT_SITE_SETTINGS = {
     whatsappNumber: '972569236758',
-    heroSubtitle: 'أحدث صيحات الموضة التركية النسائية بين يديكِ',
-    aboutText: 'فايدي تركش، وجهتكِ الأولى للأزياء التركية النسائية الفاخرة في نابلس وكل فلسطين.\nننتقي لكِ أرقى الفساتين والسبورات والأطقم التركية بأحدث صيحات الموضة وأجود الخامات.\nخدمة توصيل سريعة لجميع مناطق الضفة والقدس والداخل عبر الواتساب.',
+    heroSubtitle: 'أحلى صيحات الموضة التركية النسائية بين إيديكي',
+    aboutText: 'فايدي تركش، أول محل إلك للأزياء التركية النسائية الفخمة بنابلس وكل فلسطين.\nبنختارلك أحلى الفساتين والسبورات والأطقم التركية بآخر موضة وأجود خامة.\nبنوصّللك لعندك بسرعة لكل مناطق الضفة والقدس والداخل عالواتساب.',
     instagramLink: 'https://www.instagram.com/faidi_turkish/',
     tiktokLink: ''
 };
@@ -23,15 +23,12 @@ var BRANDS_DATA = [
 function normalizeSizeEntry(entry) {
     if (!entry) return { size: '-', unit: 'cm', price: 0, stock: null };
     var unit = entry.unit || 'cm';
-    var stock = null;
-    if (entry.stock !== undefined && entry.stock !== null && entry.stock !== '') {
-        stock = Math.max(0, parseInt(entry.stock, 10) || 0);
-    }
+    // Inventory tracking removed — stock is always untracked (null = unlimited/available).
     return {
         size: String(entry.size || '-').trim() || '-',
         unit: unit,
         price: Number(entry.price) || 0,
-        stock: stock
+        stock: null
     };
 }
 
