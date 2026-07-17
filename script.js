@@ -1392,7 +1392,6 @@ function applyHeroTransform() {
     if (!slides.length) return;
     if (heroIndex < 0) heroIndex = slides.length - 1;
     if (heroIndex >= slides.length) heroIndex = 0;
-    track.style.transform = 'translateX(' + (-heroIndex * 100) + '%)';
     for (var i = 0; i < slides.length; i++) {
         var isActive = i === heroIndex;
         slides[i].classList.toggle('active', isActive);
