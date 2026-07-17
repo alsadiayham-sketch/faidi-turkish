@@ -20,6 +20,44 @@ var BRANDS_DATA = [
     { name: 'إكسسوارات', logo: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&h=300&fit=crop' }
 ];
 
+// Fallback hero carousel images (used only when the admin hasn't added hero slides
+// and no product photos are available yet).
+var DEFAULT_HERO_IMAGES = [
+    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1440&h=900&fit=crop',
+    'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1440&h=900&fit=crop',
+    'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1440&h=900&fit=crop',
+    'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1440&h=900&fit=crop'
+];
+
+// Default homepage categories (big luxury cards). Admin-added categories override these
+// and link to the generic shop.html?cat= catalog page.
+var DEFAULT_CATEGORIES = [
+    { name: 'فساتين', image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&h=1000&fit=crop', link: 'dresses.html' },
+    { name: 'أطقم وسبورات', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&h=1000&fit=crop', link: 'clothes.html' },
+    { name: 'إكسسوارات', image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800&h=1000&fit=crop', link: 'accessories.html' }
+];
+
+function normalizeCategory(cat) {
+    if (!cat) return null;
+    var name = String(cat.name || '').trim();
+    if (!name) return null;
+    var link = String(cat.link || '').trim();
+    if (!link) link = 'shop.html?cat=' + encodeURIComponent(name);
+    return {
+        name: name,
+        image: String(cat.image || '').trim(),
+        link: link,
+        order: Number(cat.order) || 0
+    };
+}
+
+function normalizeCategories(list) {
+    return (Array.isArray(list) ? list : [])
+        .map(normalizeCategory)
+        .filter(Boolean)
+        .sort(function (a, b) { return a.order - b.order; });
+}
+
 function normalizeSizeEntry(entry) {
     if (!entry) return { size: '-', unit: 'cm', price: 0, stock: null };
     var unit = entry.unit || 'cm';
@@ -97,7 +135,8 @@ function normalizeSettings(settings) {
         heroSubtitle: String(source.heroSubtitle || DEFAULT_SITE_SETTINGS.heroSubtitle),
         aboutText: String(source.aboutText || DEFAULT_SITE_SETTINGS.aboutText),
         instagramLink: String(source.instagramLink || DEFAULT_SITE_SETTINGS.instagramLink),
-        tiktokLink: String(source.tiktokLink || DEFAULT_SITE_SETTINGS.tiktokLink)
+        tiktokLink: String(source.tiktokLink || DEFAULT_SITE_SETTINGS.tiktokLink),
+        categories: normalizeCategories(source.categories)
     };
 }
 

@@ -29,6 +29,7 @@ initializeOrderTracking();
     initCardTilt();
     initBackground();
     initHeroVideo();
+    buildHeroCarousel([]);
     initScrollReveal();
     setLoadingState(true);
     subscribeToStoreData();
@@ -135,15 +136,12 @@ function subscribeToStoreData() {
         setStoreMessage('تعذر تحميل إعدادات المتجر الحالية.', 'warning');
     }));
 
-    // Hero Display slider
+    // Hero Display slider (Zara-style carousel — admin image/video slides drive it).
     unsubscribers.push(db.collection('heroDisplay').orderBy('order', 'asc').onSnapshot(function (snapshot) {
         var slides = snapshot.docs.map(function(doc) { return doc.data(); });
-        // The intro video is the hero. Only admin-configured VIDEO slides may replace it;
-        // stale image-only slides are ignored so the hero never reverts to an old still.
-        var videoSlides = slides.filter(function (s) { return s && s.type === 'video' && s.url; });
-        if (videoSlides.length) renderHeroSlider(videoSlides);
-        // else: keep the rich static video hero (logo + subtitle + tagline) as-is.
-    }, function() { /* keep static fallback */ }));
+        heroAdminSlides = slides.filter(function (s) { return s && s.url; });
+        buildHeroCarousel(heroAdminSlides);
+    }, function() { /* keep default carousel */ }));
 }
 
 function applyFallbackStoreData(message) {
@@ -172,9 +170,29 @@ function renderStorefront() {
     checkDiscountBanner();
     updateCartBadge();
     renderProducts(getFilteredProducts(currentFilter));
+    renderCategories();
+    buildHeroCarousel(heroAdminSlides);
     updateResultsCount();
     updateCheckoutLink(updateCartTotal());
     if (!usedFallbackData) setStoreMessage('', 'info');
+}
+
+// Big luxury category cards on the homepage, driven by admin-managed settings.categories.
+function renderCategories() {
+    var host = document.getElementById('catCards');
+    if (!host) return;
+    var cats = (siteSettings.categories && siteSettings.categories.length)
+        ? siteSettings.categories
+        : DEFAULT_CATEGORIES;
+    host.innerHTML = cats.map(function (cat) {
+        var img = cat.image || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27800%27 height=%271000%27%3E%3Crect width=%27800%27 height=%271000%27 fill=%27%23efe7dd%27/%3E%3C/svg%3E';
+        return '<a href="' + escapeHtml(cat.link) + '" class="cat-card">' +
+            '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(cat.name) + '" loading="lazy">' +
+            '<div class="cat-card-overlay">' +
+            '<h3>' + escapeHtml(cat.name) + '</h3>' +
+            '<span class="go">تسوّقي القسم ←</span>' +
+            '</div></a>';
+    }).join('');
 }
 
 function updateResultsCount() {
@@ -286,7 +304,7 @@ function renderProducts(productsToShow) {
     grid.innerHTML = '';
 
     if (!productsToShow.length) {
-        grid.innerHTML = '<div class="empty-products">ما في قطع متاحة هلّق.</div>';
+        grid.innerHTML = '<div class="empty-products">ما في قطع متاحة هلا.</div>';
         return;
     }
 
@@ -820,7 +838,7 @@ function trackOrder() {
         return;
     }
     if (!window.db) {
-        result.innerHTML = '<div class="order-tracking-message error">ما قدرنا نوصل للبيانات هلّق.</div>';
+        result.innerHTML = '<div class="order-tracking-message error">ما قدرنا نوصل للبيانات هلا.</div>';
         return;
     }
     result.innerHTML = '<div class="order-tracking-message">عم ندوّر على الطلب...</div>';
@@ -833,7 +851,7 @@ function trackOrder() {
         order.id = docSnap.id;
         renderTrackedOrder(order);
     }).catch(function () {
-        result.innerHTML = '<div class="order-tracking-message error">ما قدرنا نجيب الطلب هلّق، جرّبي كمان مرة.</div>';
+        result.innerHTML = '<div class="order-tracking-message error">ما قدرنا نجيب الطلب هلا، جرّبي كمان مرة.</div>';
     });
 }
 
@@ -874,7 +892,7 @@ function addToCart(event, productId) {
 
     var qty = parseInt(document.getElementById('cardQty-' + productId).textContent, 10) || 1;
     var sizeIdx = getSelectedCardSizeIndex(productId);
-    if (!isSizeAvailable(product, sizeIdx)) { showToast('هالمقاس مش متوفر هلّق'); return; }
+    if (!isSizeAvailable(product, sizeIdx)) { showToast('هالمقاس مش متوفر هلا'); return; }
 
     var existing = cart.find(function (item) { return item.id === productId && item.sizeIdx === sizeIdx; });
     var inCart = existing ? existing.qty : 0;
@@ -1291,77 +1309,129 @@ function setDeliveryMethod(method) {
 }
 
 // ===== Hero Slider =====
-var heroSlideIndex = 0;
-var heroSlideTimer = null;
+/* ===== Zara-style hero carousel (horizontal slide, autoplay, arrows, dots, swipe) ===== */
+var heroIndex = 0;
+var heroTimer = null;
+var heroWired = false;
+var heroAdminSlides = [];
+var heroSignature = '';
 
-function renderHeroSlider(slides) {
-    var section = document.getElementById('heroSection');
+function heroMediaEl(slide) {
+    var url = slide.url;
+    var isVideo = slide.type === 'video' || /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
+    if (isVideo) {
+        return '<video class="hero-media" src="' + url + '" muted loop playsinline preload="auto"></video>';
+    }
+    return '<img class="hero-media" src="' + url + '" alt="' + (slide.title || 'فايدي تركش') + '">';
+}
+
+// Default hero images: prefer the store's own product photos, else curated fallbacks.
+function getDefaultHeroSlides() {
+    var fromProducts = (typeof products !== 'undefined' && products.length)
+        ? products.filter(function (p) { return p.image; }).slice(0, 5).map(function (p) {
+            return { type: 'image', url: p.image, title: p.name };
+        })
+        : [];
+    if (fromProducts.length) return fromProducts;
+    return (typeof DEFAULT_HERO_IMAGES !== 'undefined' ? DEFAULT_HERO_IMAGES : []).map(function (u) {
+        return { type: 'image', url: u, title: '' };
+    });
+}
+
+function buildHeroCarousel(adminSlides) {
+    var track = document.getElementById('heroTrack');
+    if (!track) return;
+    var slides = (adminSlides && adminSlides.length) ? adminSlides : getDefaultHeroSlides();
+    var sig = JSON.stringify(slides.map(function (s) { return s.url; }));
+    if (sig === heroSignature && track.querySelector('.hero-slide.injected')) return; // unchanged, keep running
+    heroSignature = sig;
+
+    // Remove previously injected slides (always keep the branded slide 0).
+    Array.prototype.slice.call(track.querySelectorAll('.hero-slide.injected')).forEach(function (el) {
+        el.parentNode.removeChild(el);
+    });
+
+    slides.forEach(function (slide) {
+        if (!slide || !slide.url) return;
+        var div = document.createElement('div');
+        div.className = 'hero-slide injected';
+        div.innerHTML = heroMediaEl(slide) +
+            '<div class="hero-slide-caption">' +
+            '<span class="eyebrow">تشكيلة فايدي</span>' +
+            '<h2>' + (slide.title ? escapeHtml(slide.title) : 'تشكيلة جديدة') + '</h2>' +
+            '<a href="#categories" class="btn-primary">تسوّقي هلا</a>' +
+            '</div>';
+        track.appendChild(div);
+    });
+
+    var carousel = track.parentNode;
+    var count = track.querySelectorAll('.hero-slide').length;
+    if (carousel) carousel.classList.toggle('is-single', count <= 1);
+
     var dotsEl = document.getElementById('heroDots');
-    if (!section || !slides || !slides.length) return;
-
-    var html = slides.map(function(slide, idx) {
-        var media = '';
-        if (slide.type === 'video') {
-            var single = slides.length <= 1;
-            var posterAttr = slide.poster ? ' poster="' + slide.poster + '"' : '';
-            var endAttr = single ? '' : ' onended="goHeroSlide(' + ((idx + 1) % slides.length) + ')"';
-            media = '<video class="hero-video" src="' + slide.url + '" muted playsinline preload="auto"' + posterAttr +
-                (idx === 0 ? ' autoplay' : '') + (single ? ' loop' : '') +
-                ' style="width:100%;height:100%;object-fit:cover;"' + endAttr + '></video>';
-        } else {
-            media = '<img src="' + slide.url + '" alt="' + (slide.title || '') + '" style="width:100%;height:100%;object-fit:cover;">';
-        }
-        return '<div class="hero-slide' + (idx === 0 ? ' active' : '') + '">' + media +
-            '<div class="hero-overlay"><div class="hero-content">' +
-            (slide.title ? '<h2>' + slide.title + '</h2>' : '') +
-            (slide.subtitle ? '<p>' + slide.subtitle + '</p>' : '') +
-            '<a href="#products" class="btn-primary">تسوقي الآن</a>' +
-            '</div></div></div>';
-    }).join('');
-    section.innerHTML = html;
-
-    // Dots
-    if (dotsEl && slides.length > 1) {
-        dotsEl.innerHTML = slides.map(function(_, idx) {
-            return '<button class="' + (idx === 0 ? 'active' : '') + '" onclick="goHeroSlide(' + idx + ')"></button>';
-        }).join('');
-        section.appendChild(dotsEl);
-        dotsEl.style.display = 'flex';
+    if (dotsEl) {
+        if (count > 1) {
+            var d = '';
+            for (var i = 0; i < count; i++) d += '<button type="button" onclick="heroGoto(' + i + ')"></button>';
+            dotsEl.innerHTML = d;
+            dotsEl.style.display = 'flex';
+        } else { dotsEl.innerHTML = ''; dotsEl.style.display = 'none'; }
     }
 
-    // Auto-advance
-    startHeroSlideTimer();
-    initHeroVideo();
+    heroIndex = 0;
+    applyHeroTransform();
+    wireHeroControls();
+    startHeroAuto();
 }
 
-function goHeroSlide(n) {
-    var section = document.getElementById('heroSection');
-    if (!section) return;
-    var allSlides = section.querySelectorAll('.hero-slide');
-    var allDots = section.querySelectorAll('.hero-dots button');
-    if (!allSlides.length) return;
-    if (allSlides[heroSlideIndex]) allSlides[heroSlideIndex].classList.remove('active');
-    if (allDots[heroSlideIndex]) allDots[heroSlideIndex].classList.remove('active');
-    heroSlideIndex = n;
-    if (allSlides[heroSlideIndex]) allSlides[heroSlideIndex].classList.add('active');
-    if (allDots[heroSlideIndex]) allDots[heroSlideIndex].classList.add('active');
-    var vid = allSlides[heroSlideIndex] ? allSlides[heroSlideIndex].querySelector('video') : null;
-    if (vid) { vid.currentTime = 0; vid.play(); }
-    startHeroSlideTimer();
-}
-
-function startHeroSlideTimer() {
-    if (heroSlideTimer) clearInterval(heroSlideTimer);
-    heroSlideTimer = setInterval(function() {
-        var section = document.getElementById('heroSection');
-        if (!section) return;
-        var allSlides = section.querySelectorAll('.hero-slide');
-        if (allSlides.length <= 1) return;
-        var current = allSlides[heroSlideIndex];
-        if (current && !current.querySelector('video')) {
-            goHeroSlide((heroSlideIndex + 1) % allSlides.length);
+function applyHeroTransform() {
+    var track = document.getElementById('heroTrack');
+    if (!track) return;
+    var slides = track.querySelectorAll('.hero-slide');
+    if (!slides.length) return;
+    if (heroIndex < 0) heroIndex = slides.length - 1;
+    if (heroIndex >= slides.length) heroIndex = 0;
+    track.style.transform = 'translateX(' + (-heroIndex * 100) + '%)';
+    for (var i = 0; i < slides.length; i++) {
+        var isActive = i === heroIndex;
+        slides[i].classList.toggle('active', isActive);
+        var v = slides[i].querySelector('video');
+        if (v) {
+            if (isActive) { try { v.currentTime = 0; } catch (e) {} var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+            else { v.pause(); }
         }
-    }, 5000);
+    }
+    var dots = document.querySelectorAll('#heroDots button');
+    for (var j = 0; j < dots.length; j++) dots[j].classList.toggle('active', j === heroIndex);
+}
+
+function heroGoto(n) { heroIndex = n; applyHeroTransform(); startHeroAuto(); }
+function heroNext() { heroIndex++; applyHeroTransform(); startHeroAuto(); }
+function heroPrev() { heroIndex--; applyHeroTransform(); startHeroAuto(); }
+
+function startHeroAuto() {
+    if (heroTimer) clearInterval(heroTimer);
+    var track = document.getElementById('heroTrack');
+    if (!track || track.querySelectorAll('.hero-slide').length <= 1) return;
+    if (prefersReducedMotion()) return;
+    heroTimer = setInterval(heroNext, 5000);
+}
+
+function wireHeroControls() {
+    if (heroWired) return;
+    heroWired = true;
+    var carousel = document.querySelector('.hero-carousel');
+    if (!carousel) return;
+    carousel.addEventListener('mouseenter', function () { if (heroTimer) clearInterval(heroTimer); });
+    carousel.addEventListener('mouseleave', startHeroAuto);
+    var startX = 0, dragging = false;
+    carousel.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; dragging = true; }, { passive: true });
+    carousel.addEventListener('touchend', function (e) {
+        if (!dragging) return; dragging = false;
+        var dx = e.changedTouches[0].clientX - startX;
+        if (Math.abs(dx) < 40) return;
+        if (dx < 0) heroNext(); else heroPrev();
+    }, { passive: true });
 }
 
 function buildPdpMedia(product) {
@@ -1494,7 +1564,7 @@ function changePDPQty(delta) {
 
 function addFromPDP() {
     if (!currentPDPProduct || isProductSoldOut(currentPDPProduct)) return;
-    if (!isSizeAvailable(currentPDPProduct, currentPDPSizeIdx)) { showToast('هالمقاس مش متوفر هلّق'); return; }
+    if (!isSizeAvailable(currentPDPProduct, currentPDPSizeIdx)) { showToast('هالمقاس مش متوفر هلا'); return; }
 
     var existing = cart.find(function (item) { return item.id === currentPDPProduct.id && item.sizeIdx === currentPDPSizeIdx; });
     var inCart = existing ? existing.qty : 0;

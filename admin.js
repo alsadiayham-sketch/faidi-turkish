@@ -116,12 +116,13 @@ function switchTab(tab, button) {
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'orders') renderOrdersTable();
     if (tab === 'hero') renderHeroTable();
+    if (tab === 'categories') renderCategoriesTable();
     if (tab === 'users') loadUsers();
 }
 
 function applyRolePermissions() {
     var isWorker = currentUser && currentUser.role === 'worker';
-    var hiddenTabs = ['dashboard', 'products', 'hero', 'settings', 'users'];
+    var hiddenTabs = ['dashboard', 'products', 'hero', 'categories', 'settings', 'users'];
     document.querySelectorAll('.tab-btn').forEach(function (btn) {
         var tab = btn.getAttribute('data-tab');
         btn.style.display = (isWorker && hiddenTabs.indexOf(tab) >= 0) ? 'none' : '';
@@ -296,6 +297,7 @@ function subscribeToCollections() {
         siteSettings = normalizeSettings(docSnap.exists ? docSnap.data() : DEFAULT_SITE_SETTINGS);
         adminReady.settings = true;
         loadSettingsForm();
+        renderCategoriesTable();
         checkAdminReady();
     }, function (error) {
         console.error(error);
@@ -667,7 +669,8 @@ async function saveSettingsForm(event) {
         heroSubtitle: document.getElementById('settingHero').value,
         aboutText: document.getElementById('settingAbout').value,
         instagramLink: document.getElementById('settingInstagram').value,
-        tiktokLink: document.getElementById('settingTiktok').value
+        tiktokLink: document.getElementById('settingTiktok').value,
+        categories: siteSettings.categories
     });
     setAdminLoading(true);
     await db.collection('settings').doc('config').set(siteSettings, { merge: true });
@@ -955,16 +958,16 @@ function generatePosterFromUrl(url, name) {
         img.onload = function () {
             try {
                 var canvas = document.createElement('canvas');
-                var maxSize = 400;
-                var w = img.naturalWidth || img.width || 400;
-                var h = img.naturalHeight || img.height || 400;
+                var maxSize = 1080;
+                var w = img.naturalWidth || img.width || 1080;
+                var h = img.naturalHeight || img.height || 1080;
                 if (w > h) { if (w > maxSize) { h = h * maxSize / w; w = maxSize; } }
                 else { if (h > maxSize) { w = w * maxSize / h; h = maxSize; } }
                 canvas.width = Math.max(2, Math.round(w));
                 canvas.height = Math.max(2, Math.round(h));
                 var ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                var base64 = canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
+                var base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
                 var formData = new FormData();
                 formData.append('key', 'de10f7f874d9dbf904fe0cd0ad00332d');
                 formData.append('image', base64);
@@ -1015,8 +1018,9 @@ function uploadBlobToImgbb(blob, name) {
     });
 }
 
-// Convert any uploaded video (including big files) to a lightweight animated GIF.
-// Big videos are handled by capping duration (6s), downscaling (max 480px) and frame count (48).
+// Convert any uploaded video (including big files) to a HIGH-RESOLUTION animated GIF.
+// Long edge is preserved up to 1440px for a sharp look; frame count is scaled down for
+// large frames to keep browser memory and the final file size (ImgBB 32MB cap) under control.
 function convertVideoToGif(file, onProgress) {
     return new Promise(function (resolve, reject) {
         if (typeof GIF === 'undefined') { reject(new Error('مكتبة GIF غير محمّلة')); return; }
@@ -1028,10 +1032,11 @@ function convertVideoToGif(file, onProgress) {
         video.src = url;
         video.onerror = function () { URL.revokeObjectURL(url); reject(new Error('تعذر قراءة الفيديو')); };
         video.onloadedmetadata = function () {
-            var maxW = 480;
-            var vw = video.videoWidth || 480;
-            var vh = video.videoHeight || 640;
-            var scale = Math.min(1, maxW / vw);
+            var maxLongEdge = 1440;
+            var vw = video.videoWidth || 810;
+            var vh = video.videoHeight || 1440;
+            // Scale so the LONGEST side is at most 1440 (never upscale beyond the source).
+            var scale = Math.min(1, maxLongEdge / Math.max(vw, vh));
             var w = Math.max(2, Math.round(vw * scale));
             var h = Math.max(2, Math.round(vh * scale));
             var canvas = document.createElement('canvas');
@@ -1040,12 +1045,15 @@ function convertVideoToGif(file, onProgress) {
             var duration = video.duration;
             if (!isFinite(duration) || duration <= 0) duration = 4;
             duration = Math.min(duration, 6);
-            var fps = 8;
-            var frameCount = Math.max(4, Math.min(Math.floor(duration * fps), 48));
+            // Bigger frames -> fewer frames, so a 1440px GIF stays under the 32MB ImgBB limit.
+            var longEdge = Math.max(w, h);
+            var fps = longEdge > 1080 ? 8 : (longEdge > 720 ? 10 : 12);
+            var frameCap = longEdge > 1080 ? 36 : (longEdge > 720 ? 48 : 60);
+            var frameCount = Math.max(4, Math.min(Math.floor(duration * fps), frameCap));
             var interval = duration / frameCount;
             var gif = new GIF({
                 workers: 2,
-                quality: 12,
+                quality: 8,
                 width: w,
                 height: h,
                 repeat: 0,
@@ -1138,4 +1146,69 @@ async function saveHeroSlide(event) {
 async function deleteHeroSlide(id) {
     if (!confirm('حذف هذه الصورة من واجهة المتجر؟')) return;
     await db.collection('heroDisplay').doc(String(id)).delete();
+}
+
+/* ===== Categories management (persisted inside settings.categories) ===== */
+function renderCategoriesTable() {
+    var body = document.getElementById('catTableBody');
+    if (!body) return;
+    var cats = siteSettings.categories || [];
+    if (!cats.length) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:18px;">لا توجد أقسام بعد. أضيفي قسماً ليظهر بالصفحة الرئيسية.</td></tr>';
+        return;
+    }
+    body.innerHTML = cats.map(function (c, i) {
+        var img = c.image
+            ? '<img src="' + c.image + '" style="width:74px;height:54px;object-fit:cover;border-radius:6px;">'
+            : '—';
+        return '<tr><td>' + img + '</td><td>' + escapeHtml(c.name) + '</td><td style="font-size:12px;color:#888;word-break:break-all;">' + escapeHtml(c.link) + '</td><td>' + (c.order || 0) + '</td><td><button class="btn-danger" style="padding:6px 14px;font-size:13px;" onclick="deleteCategory(' + i + ')">حذف</button></td></tr>';
+    }).join('');
+}
+
+async function saveCategory(event) {
+    event.preventDefault();
+    var name = document.getElementById('catName').value.trim();
+    var order = parseInt(document.getElementById('catOrder').value || '0', 10) || 0;
+    var image = document.getElementById('catImage').value.trim();
+    var link = document.getElementById('catLink').value.trim();
+    var fileInput = document.getElementById('catFile');
+    var btn = document.getElementById('catSaveBtn');
+    var statusEl = document.getElementById('catUploadStatus');
+    if (!name) { alert('أدخلي اسم القسم.'); return; }
+    try {
+        btn.disabled = true;
+        if (fileInput.files && fileInput.files[0]) {
+            statusEl.textContent = 'جاري رفع الصورة...';
+            image = await uploadProductImage(fileInput.files[0], 'cat_' + Date.now());
+        }
+        if (!image) {
+            alert('اختاري صورة للقسم أو أدخلي رابط صورة.');
+            btn.disabled = false; statusEl.textContent = '';
+            return;
+        }
+        var cats = (siteSettings.categories || []).slice();
+        cats.push({ name: name, image: image, link: link, order: order });
+        statusEl.textContent = 'جاري الحفظ...';
+        await db.collection('settings').doc('config').set({ categories: normalizeCategories(cats) }, { merge: true });
+        statusEl.textContent = 'تمت الإضافة بنجاح ✓';
+        document.getElementById('catName').value = '';
+        document.getElementById('catImage').value = '';
+        document.getElementById('catLink').value = '';
+        document.getElementById('catOrder').value = '0';
+        fileInput.value = '';
+        setTimeout(function () { statusEl.textContent = ''; }, 2500);
+    } catch (e) {
+        console.error(e);
+        statusEl.textContent = '';
+        alert('حدث خطأ: ' + (e && e.message ? e.message : e));
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function deleteCategory(index) {
+    if (!confirm('حذف هذا القسم؟')) return;
+    var cats = (siteSettings.categories || []).slice();
+    cats.splice(index, 1);
+    await db.collection('settings').doc('config').set({ categories: cats }, { merge: true });
 }

@@ -172,7 +172,7 @@
         function render() {
             var container = document.getElementById('checkoutContent');
             if (cart.length === 0) {
-                container.innerHTML = '<div class="empty-checkout"><span>•</span><p>السلة فاضية! ضيفي منتجات الأول</p><a href="index.html">تسوّقي هلّق</a></div>';
+                container.innerHTML = '<div class="empty-checkout"><span>•</span><p>السلة فاضية! ضيفي منتجات الأول</p><a href="index.html">تسوّقي هلا</a></div>';
                 return;
             }
 
@@ -434,7 +434,7 @@
             html += '<div class="checkout-success-card">';
             html += '<h3>تم حفظ طلبك تمام</h3>';
             html += '<div class="checkout-success-order-id">رقم الطلب: ' + order.id + '</div>';
-            html += '<p>بتقدري هلّق تبعتي الطلب عالواتساب إذا حابة، أو ترجعي عالمتجر مباشرة.</p>';
+            html += '<p>بتقدري هلا تبعتي الطلب عالواتساب إذا حابة، أو ترجعي عالمتجر مباشرة.</p>';
             html += '<div class="checkout-success-actions">';
             html += '<a href="' + whatsappUrl + '" target="_blank" rel="noopener" class="btn-success-whatsapp">إرسال عبر واتساب</a>';
             html += '<button type="button" class="btn-success-back" onclick="window.location.href=\'confirmation.html\'">تمام، رجعيني عالمتجر</button>';
@@ -462,7 +462,7 @@
 
             var order = buildOrder();
             if (!window.db) {
-                alert('ما قدرنا نوصل للبيانات هلّق، جرّبي كمان مرة.');
+                alert('ما قدرنا نوصل للبيانات هلا، جرّبي كمان مرة.');
                 button.disabled = false;
                 button.textContent = originalText;
                 setStatus('');
@@ -479,7 +479,7 @@
                 window.location.href = whatsappUrl;
             }).catch(function (error) {
                 console.error(error);
-                alert('ما قدرنا نحفظ الطلب هلّق، جرّبي كمان مرة.');
+                alert('ما قدرنا نحفظ الطلب هلا، جرّبي كمان مرة.');
                 button.disabled = false;
                 button.textContent = originalText;
                 setStatus('');

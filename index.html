@@ -62,25 +62,31 @@
     </div>
 
     <section class="hero" id="heroSection">
-        <div class="hero-slide active">
-            <img class="hero-video hero-owner-img" src="hero-owner.jpg" alt="فايدي تركش - المتجر">
-            <div class="hero-overlay">
-                <div class="hero-content">
-                    <span class="pill-label on-dark hero-eyebrow"><span class="dot"></span>أزياء تركية أصلية · نابلس</span>
-                    <h1 id="heroTitle">إطلالتك التركية <span class="gradient-text">بأحلى تفصيلة</span></h1>
-                    <p class="hero-subtitle" id="heroSubtitle">أحلى صيحات الموضة التركية النسائية بين إيديكي</p>
-                    <p class="hero-tagline">فساتين وسبورات وأطقم تركية فخمة، وبنوصّللك لعندك بكل مناطق الضفة والقدس والداخل</p>
-                    <div class="hero-cta">
-                        <a href="dresses.html" class="btn-primary">تسوّقي هلّق</a>
-                        <a href="#featured" class="btn-ghost on-dark">شوفي التشكيلة</a>
-                    </div>
-                    <div class="hero-stats">
-                        <div class="hero-stat"><strong>تركي ١٠٠٪</strong><span>خامات أصلية</span></div>
-                        <div class="hero-stat"><strong>توصيل سريع</strong><span>لكل فلسطين</span></div>
-                        <div class="hero-stat"><strong>تشكيلة جديدة</strong><span>بتتجدد دايمًا</span></div>
+        <div class="hero-carousel">
+            <div class="hero-track" id="heroTrack">
+                <div class="hero-slide is-brand active">
+                    <img class="hero-media hero-owner-img" src="hero-owner.jpg" alt="فايدي تركش - المتجر">
+                    <div class="hero-overlay">
+                        <div class="hero-content">
+                            <span class="pill-label on-dark hero-eyebrow"><span class="dot"></span>أزياء تركية أصلية · نابلس</span>
+                            <h1 id="heroTitle">إطلالتك التركية <span class="gradient-text">بأحلى تفصيلة</span></h1>
+                            <p class="hero-subtitle" id="heroSubtitle">أحلى صيحات الموضة التركية النسائية بين إيديكي</p>
+                            <p class="hero-tagline">فساتين وسبورات وأطقم تركية فخمة، وبنوصّللك لعندك بكل مناطق الضفة والقدس والداخل</p>
+                            <div class="hero-cta">
+                                <a href="dresses.html" class="btn-primary">تسوّقي هلا</a>
+                                <a href="#categories" class="btn-ghost on-dark">شوفي الأقسام</a>
+                            </div>
+                            <div class="hero-stats">
+                                <div class="hero-stat"><strong>تركي ١٠٠٪</strong><span>خامات أصلية</span></div>
+                                <div class="hero-stat"><strong>توصيل سريع</strong><span>لكل فلسطين</span></div>
+                                <div class="hero-stat"><strong>تشكيلة جديدة</strong><span>بتتجدد دايمًا</span></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+            <button class="hero-arrow hero-prev" type="button" aria-label="السابق" onclick="heroPrev()">‹</button>
+            <button class="hero-arrow hero-next" type="button" aria-label="التالي" onclick="heroNext()">›</button>
         </div>
         <div class="hero-dots" id="heroDots"></div>
     </section>
@@ -89,68 +95,7 @@
         <div class="container">
             <span class="eyebrow" style="text-align:center;display:block;">تسوّقي حسب القسم</span>
             <h2 class="section-title">أقسام فايدي تركش</h2>
-            <div class="cat-cards">
-                <a href="dresses.html" class="cat-card">
-                    <img src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=800&h=1000&fit=crop" alt="فساتين" loading="lazy">
-                    <div class="cat-card-overlay">
-                        <span class="eyebrow">Dresses</span>
-                        <h3>فساتين</h3>
-                        <span class="go">تسوّقي القسم ←</span>
-                    </div>
-                </a>
-                <a href="clothes.html" class="cat-card">
-                    <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&h=1000&fit=crop" alt="أطقم وملابس" loading="lazy">
-                    <div class="cat-card-overlay">
-                        <span class="eyebrow">Outfits</span>
-                        <h3>أطقم وملابس</h3>
-                        <span class="go">تسوّقي القسم ←</span>
-                    </div>
-                </a>
-                <a href="accessories.html" class="cat-card">
-                    <img src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=800&h=1000&fit=crop" alt="إكسسوارات" loading="lazy">
-                    <div class="cat-card-overlay">
-                        <span class="eyebrow">Accessories</span>
-                        <h3>إكسسوارات</h3>
-                        <span class="go">تسوّقي القسم ←</span>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <section id="featured" class="filter-section">
-        <div class="container">
-            <div class="featured-head">
-                <div>
-                    <span class="eyebrow">مختارات لإلك</span>
-                    <h2 class="section-title" style="text-align:right;">لمحة من التشكيلة</h2>
-                </div>
-            </div>
-            <p class="store-notice" id="storeNotice" style="display:none;"></p>
-            <div class="products-search">
-                <input type="text" id="productsSearchInput" placeholder="دوّري على قطعة، ماركة، أو قسم..." autocomplete="off">
-                <div class="search-dropdown" id="productsSearchDropdown"></div>
-            </div>
-            <div class="filter-toggle-bar">
-                <button class="filter-btn active" data-filter="all" onclick="filterProducts('all')">الكل</button>
-                <button class="filter-btn status-btn" data-filter="special" onclick="filterProducts('special')">مميّز</button>
-                <button class="filter-btn status-btn" data-filter="bestseller" onclick="filterProducts('bestseller')">الأكثر مبيعًا</button>
-                <button class="filter-toggle-btn" onclick="toggleFilters()">فلتر ▼</button>
-            </div>
-            <div class="filter-panel" id="filterPanel" style="display:none;">
-                <div class="filter-group"><h4>الماركة</h4><div id="brandFilters"></div></div>
-                <div class="filter-group"><h4>القسم</h4><div id="categoryFilters"></div></div>
-            </div>
-        </div>
-    </section>
-
-    <section class="products-section">
-        <div class="container products-shell">
-            <div class="store-loading" id="storeLoading">
-                <div class="spinner"></div>
-                <p>عم نجهّزلك التشكيلة...</p>
-            </div>
-            <div class="products-grid" id="productsGrid"></div>
+            <div class="cat-cards" id="catCards"></div>
         </div>
     </section>
 
