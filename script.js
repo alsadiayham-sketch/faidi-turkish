@@ -189,6 +189,7 @@ function renderCategories() {
         return '<a href="' + escapeHtml(cat.link) + '" class="cat-card">' +
             '<img src="' + escapeHtml(img) + '" alt="' + escapeHtml(cat.name) + '" loading="lazy">' +
             '<div class="cat-card-overlay">' +
+            '<span class="eyebrow">تشكيلة فايدي</span>' +
             '<h3>' + escapeHtml(cat.name) + '</h3>' +
             '<span class="go">تسوّقي القسم ←</span>' +
             '</div></a>';
