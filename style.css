@@ -237,13 +237,16 @@ body.has-banner .hero { margin-top: 0; }
     opacity: 0;
     visibility: hidden;
     z-index: 1;
-    transition: opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 1.4s;
+    transform-origin: center;
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.7s;
 }
 .hero .hero-slide.active {
     opacity: 1;
     visibility: visible;
     z-index: 2;
-    transition: opacity 1.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
+    /* nice rotational reveal on the incoming slide (echoes the fanned-image motion) */
+    animation: heroSlideIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .hero .hero-slide > img,
 .hero .hero-slide > video {
@@ -256,13 +259,18 @@ body.has-banner .hero { margin-top: 0; }
 /* Continuous, gentle Zara-style ken-burns: the active slide keeps drifting + zooming the whole time it's shown */
 .hero .hero-slide.active > img,
 .hero .hero-slide.active > video {
-    animation: heroKenBurns 8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    animation: heroKenBurns 5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes heroSlideIn {
+    0%   { transform: rotate(2.5deg) scale(1.07); }
+    100% { transform: rotate(0deg) scale(1); }
 }
 @keyframes heroKenBurns {
     0%   { transform: scale(1.02) translate3d(0, 0, 0); }
-    100% { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+    100% { transform: scale(1.1) translate3d(-1.5%, -1%, 0); }
 }
 @media (prefers-reduced-motion: reduce) {
+    .hero .hero-slide.active { animation: none; }
     .hero .hero-slide.active > img,
     .hero .hero-slide.active > video { animation: none; transform: scale(1); }
 }

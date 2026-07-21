@@ -1453,7 +1453,7 @@ function startHeroAuto() {
     var track = document.getElementById('heroTrack');
     if (!track || track.querySelectorAll('.hero-slide').length <= 1) return;
     if (prefersReducedMotion()) return;
-    heroTimer = setInterval(heroNext, 6000);
+    heroTimer = setInterval(heroNext, 3500);
 }
 
 function wireHeroControls() {
