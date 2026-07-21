@@ -924,7 +924,7 @@ async function uploadProductImage(file, productId) {
             var img = new Image();
             img.onload = function () {
                 var canvas = document.createElement('canvas');
-                var maxSize = 600;
+                var maxSize = 1440;
                 var w = img.width;
                 var h = img.height;
                 if (w > h) { if (w > maxSize) { h = h * maxSize / w; w = maxSize; } }
@@ -932,8 +932,10 @@ async function uploadProductImage(file, productId) {
                 canvas.width = w;
                 canvas.height = h;
                 var ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, w, h);
-                var base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                var base64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
                 var formData = new FormData();
                 formData.append('key', 'de10f7f874d9dbf904fe0cd0ad00332d');
                 formData.append('image', base64);
@@ -965,7 +967,7 @@ function generatePosterFromUrl(url, name) {
         img.onload = function () {
             try {
                 var canvas = document.createElement('canvas');
-                var maxSize = 1080;
+                var maxSize = 1440;
                 var w = img.naturalWidth || img.width || 1080;
                 var h = img.naturalHeight || img.height || 1080;
                 if (w > h) { if (w > maxSize) { h = h * maxSize / w; w = maxSize; } }
@@ -973,8 +975,10 @@ function generatePosterFromUrl(url, name) {
                 canvas.width = Math.max(2, Math.round(w));
                 canvas.height = Math.max(2, Math.round(h));
                 var ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                var base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+                var base64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
                 var formData = new FormData();
                 formData.append('key', 'de10f7f874d9dbf904fe0cd0ad00332d');
                 formData.append('image', base64);
@@ -1049,18 +1053,21 @@ function convertVideoToGif(file, onProgress) {
             var canvas = document.createElement('canvas');
             canvas.width = w; canvas.height = h;
             var ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             var duration = video.duration;
             if (!isFinite(duration) || duration <= 0) duration = 4;
             duration = Math.min(duration, 6);
-            // Bigger frames -> fewer frames, so a 1440px GIF stays under the 32MB ImgBB limit.
+            // Bigger frames -> fewer frames, so a high-res GIF stays under the 32MB ImgBB limit.
             var longEdge = Math.max(w, h);
-            var fps = longEdge > 1080 ? 8 : (longEdge > 720 ? 10 : 12);
-            var frameCap = longEdge > 1080 ? 36 : (longEdge > 720 ? 48 : 60);
+            var fps = longEdge > 1080 ? 10 : (longEdge > 720 ? 12 : 15);
+            var frameCap = longEdge > 1080 ? 32 : (longEdge > 720 ? 44 : 56);
             var frameCount = Math.max(4, Math.min(Math.floor(duration * fps), frameCap));
             var interval = duration / frameCount;
             var gif = new GIF({
                 workers: 2,
-                quality: 8,
+                quality: 5,
+                dither: 'FloydSteinberg-serpentine',
                 width: w,
                 height: h,
                 repeat: 0,

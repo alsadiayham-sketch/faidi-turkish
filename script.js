@@ -1352,7 +1352,7 @@ function setDeliveryMethod(method) {
 /* ===== Zara-style hero carousel (horizontal slide, autoplay, arrows, dots, swipe) ===== */
 var heroIndex = 0;
 var heroTimer = null;
-var heroFxTypes = ['fade', 'zoom', 'wipe', 'rotate', 'slide', 'blur'];
+var heroFxTypes = ['fade', 'rise', 'reveal'];
 var heroFxCounter = 0;
 var heroWired = false;
 var heroAdminSlides = [];
