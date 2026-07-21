@@ -13,6 +13,7 @@
         products: { ep: 'products', key: 'products' },
         discounts: { ep: 'discounts', key: 'discounts' },
         orders: { ep: 'orders', key: 'orders' },
+        complaints: { ep: 'complaints', key: 'complaints' },
         heroDisplay: { ep: 'hero', key: 'hero' }
     };
 
@@ -123,7 +124,7 @@
         var res = RESOURCE[this.name];
         var body = {}; for (var k in data) body[k] = data[k];
         body.id = this.id;
-        var isPublic = this.name === 'orders';
+        var isPublic = this.name === 'orders' || this.name === 'complaints';
         return apiFetch('/' + res.ep, { method: 'POST', auth: !isPublic, body: body });
     };
 
@@ -131,6 +132,9 @@
         var self = this;
         if (this.name === 'orders') {
             return apiFetch('/orders?id=' + encodeURIComponent(this.id), { method: 'PATCH', auth: true, body: { status: data.status } });
+        }
+        if (this.name === 'complaints') {
+            return apiFetch('/complaints?id=' + encodeURIComponent(this.id), { method: 'PATCH', auth: true, body: { status: data.status } });
         }
         if (this.name === 'settings') {
             return settingsGet().then(function (snap) {
@@ -181,7 +185,7 @@
 
     Collection.prototype.add = function (data) {
         var res = RESOURCE[this.name];
-        var isPublic = this.name === 'orders';
+        var isPublic = this.name === 'orders' || this.name === 'complaints';
         return apiFetch('/' + res.ep, { method: 'POST', auth: !isPublic, body: data }).then(function (d) {
             return { id: d && d.id };
         });

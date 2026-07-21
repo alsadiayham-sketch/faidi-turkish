@@ -867,6 +867,45 @@ function initializeOrderTracking() {
     });
 }
 
+// Customer complaint / feedback → stored in D1 via /api/complaints (public).
+function submitComplaint(event) {
+    if (event) event.preventDefault();
+    var nameEl = document.getElementById('complaintName');
+    var phoneEl = document.getElementById('complaintPhone');
+    var typeEl = document.getElementById('complaintType');
+    var msgEl = document.getElementById('complaintMessage');
+    var btn = document.getElementById('complaintSubmitBtn');
+    var statusEl = document.getElementById('complaintStatus');
+    if (!msgEl) return;
+    var message = (msgEl.value || '').trim();
+    if (!message) {
+        if (statusEl) { statusEl.textContent = 'اكتبي رسالتك أول.'; statusEl.className = 'complaint-status error'; }
+        msgEl.focus();
+        return;
+    }
+    var payload = {
+        name: (nameEl && nameEl.value || '').trim(),
+        phone: (phoneEl && phoneEl.value || '').trim(),
+        type: (typeEl && typeEl.value) || 'شكوى',
+        message: message,
+        createdAt: Date.now()
+    };
+    if (btn) { btn.disabled = true; btn.textContent = 'عم نبعت...'; }
+    if (statusEl) { statusEl.textContent = ''; statusEl.className = 'complaint-status'; }
+    db.collection('complaints').add(payload).then(function () {
+        if (statusEl) { statusEl.textContent = 'وصلتنا رسالتك، شكراً إلك! بنرجعلك بأقرب وقت 💛'; statusEl.className = 'complaint-status success'; }
+        if (nameEl) nameEl.value = '';
+        if (phoneEl) phoneEl.value = '';
+        if (msgEl) msgEl.value = '';
+        if (typeEl) typeEl.value = 'شكوى';
+        showToast('تم إرسال رسالتك بنجاح');
+    }).catch(function () {
+        if (statusEl) { statusEl.textContent = 'صار خطأ بالإرسال، جرّبي كمان مرة أو راسلينا واتساب.'; statusEl.className = 'complaint-status error'; }
+    }).then(function () {
+        if (btn) { btn.disabled = false; btn.textContent = 'ابعتي الرسالة'; }
+    });
+}
+
 function getSelectedCardSizeIndex(productId) {
     var select = document.getElementById('sizeSelect-' + productId);
     return select ? parseInt(select.value || '0', 10) || 0 : 0;
@@ -1414,7 +1453,7 @@ function startHeroAuto() {
     var track = document.getElementById('heroTrack');
     if (!track || track.querySelectorAll('.hero-slide').length <= 1) return;
     if (prefersReducedMotion()) return;
-    heroTimer = setInterval(heroNext, 5000);
+    heroTimer = setInterval(heroNext, 6000);
 }
 
 function wireHeroControls() {

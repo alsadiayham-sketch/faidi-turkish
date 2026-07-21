@@ -26,6 +26,13 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at INTEGER NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS complaints (
+  id         TEXT PRIMARY KEY,
+  data       TEXT NOT NULL,
+  status     TEXT NOT NULL DEFAULT 'new',
+  created_at INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS discounts (
   id         TEXT PRIMARY KEY,
   data       TEXT NOT NULL,

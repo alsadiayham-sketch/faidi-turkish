@@ -11,6 +11,7 @@ var products = [];
 var discounts = [];
 var orders = [];
 var heroSlides = [];
+var complaints = [];
 var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
 var unsubscribers = [];
 var charts = {};
@@ -115,6 +116,7 @@ function switchTab(tab, button) {
     }
     if (tab === 'dashboard') renderDashboard();
     if (tab === 'orders') renderOrdersTable();
+    if (tab === 'complaints') renderComplaintsTable();
     if (tab === 'hero') renderHeroTable();
     if (tab === 'categories') renderCategoriesTable();
     if (tab === 'users') loadUsers();
@@ -309,6 +311,11 @@ function subscribeToCollections() {
         heroSlides = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return d; });
         renderHeroTable();
     }, function () { /* hero is optional, ignore errors */ }));
+
+    unsubscribers.push(db.collection('complaints').orderBy('createdAt', 'desc').onSnapshot(function (snapshot) {
+        complaints = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return d; });
+        renderComplaintsTable();
+    }, function () { /* complaints optional, ignore errors */ }));
 }
 
 function checkAdminReady() {
@@ -1211,4 +1218,62 @@ async function deleteCategory(index) {
     var cats = (siteSettings.categories || []).slice();
     cats.splice(index, 1);
     await db.collection('settings').doc('config').set({ categories: cats }, { merge: true });
+}
+
+/* ===== Complaints / feedback management ===== */
+function complaintStatusLabel(s) {
+    if (s === 'read') return 'تمت القراءة';
+    if (s === 'resolved') return 'تم الحل';
+    return 'جديدة';
+}
+
+function renderComplaintsTable() {
+    var body = document.getElementById('complaintsTableBody');
+    if (!body) return;
+    var filterEl = document.getElementById('complaintStatusFilter');
+    var filter = filterEl ? filterEl.value : 'all';
+    var list = complaints.filter(function (c) { return filter === 'all' || (c.status || 'new') === filter; });
+    if (!list.length) {
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:18px;">لا توجد رسائل بعد.</td></tr>';
+        return;
+    }
+    body.innerHTML = list.map(function (c) {
+        var date = c.createdAt ? new Date(c.createdAt).toLocaleString('ar') : '-';
+        var phone = c.phone ? escapeHtml(c.phone) : '-';
+        var status = c.status || 'new';
+        return '<tr' + (status === 'new' ? ' style="background:rgba(196,161,94,0.08);"' : '') + '>' +
+            '<td style="white-space:nowrap;font-size:12px;">' + escapeHtml(date) + '</td>' +
+            '<td>' + escapeHtml(c.type || 'شكوى') + '</td>' +
+            '<td>' + (c.name ? escapeHtml(c.name) : '-') + '</td>' +
+            '<td style="white-space:nowrap;">' + phone + '</td>' +
+            '<td style="max-width:340px;white-space:pre-wrap;">' + escapeHtml(c.message || '') + '</td>' +
+            '<td><select onchange="updateComplaintStatus(\'' + c.id + '\', this.value)">' +
+                '<option value="new"' + (status === 'new' ? ' selected' : '') + '>جديدة</option>' +
+                '<option value="read"' + (status === 'read' ? ' selected' : '') + '>تمت القراءة</option>' +
+                '<option value="resolved"' + (status === 'resolved' ? ' selected' : '') + '>تم الحل</option>' +
+            '</select></td>' +
+            '<td><button class="btn-danger" style="padding:6px 14px;font-size:13px;" onclick="deleteComplaint(\'' + c.id + '\')">حذف</button></td>' +
+        '</tr>';
+    }).join('');
+}
+
+async function updateComplaintStatus(id, status) {
+    try {
+        await db.collection('complaints').doc(String(id)).update({ status: status });
+        var c = complaints.filter(function (x) { return x.id === id; })[0];
+        if (c) c.status = status;
+    } catch (e) {
+        setAdminStatus('تعذر تحديث حالة الرسالة.', 'error');
+    }
+}
+
+async function deleteComplaint(id) {
+    if (!confirm('حذف هذه الرسالة؟')) return;
+    try {
+        await db.collection('complaints').doc(String(id)).delete();
+        complaints = complaints.filter(function (x) { return x.id !== id; });
+        renderComplaintsTable();
+    } catch (e) {
+        setAdminStatus('تعذر حذف الرسالة.', 'error');
+    }
 }

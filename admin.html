@@ -30,6 +30,7 @@
                     <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">لوحة المعلومات</button>
                     <button class="tab-btn" data-tab="products" onclick="switchTab('products', this)">المنتجات</button>
                     <button class="tab-btn" data-tab="orders" onclick="switchTab('orders', this)">الطلبات</button>
+                    <button class="tab-btn" data-tab="complaints" onclick="switchTab('complaints', this)">الشكاوى</button>
                     <button class="tab-btn" data-tab="hero" onclick="switchTab('hero', this)">الواجهة</button>
                     <button class="tab-btn" data-tab="categories" onclick="switchTab('categories', this)">الأقسام</button>
                     <button class="tab-btn" data-tab="settings" onclick="switchTab('settings', this)">الإعدادات</button>
@@ -113,6 +114,26 @@
                 <table class="admin-table">
                     <thead><tr><th>رقم الطلب</th><th>التاريخ</th><th>العميل</th><th>الهاتف</th><th>عدد القطع</th><th>الإجمالي</th><th>التوصيل</th><th>الحالة</th></tr></thead>
                     <tbody id="ordersTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-complaints">
+            <div class="tab-header">
+                <h3>الشكاوى والاقتراحات</h3>
+                <div class="orders-filters">
+                    <select id="complaintStatusFilter" onchange="renderComplaintsTable()">
+                        <option value="all">كل الحالات</option>
+                        <option value="new">جديدة</option>
+                        <option value="read">تمت القراءة</option>
+                        <option value="resolved">تم الحل</option>
+                    </select>
+                </div>
+            </div>
+            <div class="products-table-container">
+                <table class="admin-table">
+                    <thead><tr><th>التاريخ</th><th>النوع</th><th>الاسم</th><th>الهاتف</th><th>الرسالة</th><th>الحالة</th><th></th></tr></thead>
+                    <tbody id="complaintsTableBody"></tbody>
                 </table>
             </div>
         </div>

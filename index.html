@@ -42,6 +42,7 @@
                 <li><a href="clothes.html">أطقم وملابس</a></li>
                 <li><a href="accessories.html">إكسسوارات</a></li>
                 <li><a href="#order-tracking">تتبّعي طلبك</a></li>
+                <li><a href="#complaints">تواصلي معنا</a></li>
             </ul>
             <div class="cart-icon" id="cartIcon" onclick="toggleCart()">
                 🛒
@@ -59,6 +60,7 @@
         <a href="#about" onclick="toggleMobileMenu()">مين إحنا</a>
         <a href="#delivery" onclick="toggleMobileMenu()">التوصيل</a>
         <a href="#order-tracking" onclick="toggleMobileMenu()">تتبّعي طلبك</a>
+        <a href="#complaints" onclick="toggleMobileMenu()">شكوى أو اقتراح</a>
     </div>
 
     <section class="hero" id="heroSection">
@@ -158,6 +160,50 @@
                     <button type="button" class="btn-primary" id="orderTrackingBtn" onclick="trackOrder()">دوّري</button>
                 </div>
                 <div id="orderTrackingResult" class="order-tracking-result"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="complaints" class="complaint-section">
+        <div class="container">
+            <div class="complaint-shell">
+                <div class="complaint-intro">
+                    <span class="eyebrow">رأيك بيهمّنا</span>
+                    <h2 class="section-title" style="text-align:right;">عندك شكوى أو اقتراح؟</h2>
+                    <p>إحنا بفايدي تركش منسمعك دايمًا. إذا في إشي مضايقك أو عندك فكرة بتحسّن تجربتك، احكيلنا وبنرجعلك بأسرع وقت.</p>
+                    <ul class="complaint-points">
+                        <li><span>✦</span> بنقرأ كل رسالة بنفسنا</li>
+                        <li><span>✦</span> خصوصيتك محفوظة تمامًا</li>
+                        <li><span>✦</span> بنتواصل معك إذا تركتِ رقمك</li>
+                    </ul>
+                </div>
+                <form class="complaint-form" id="complaintForm" onsubmit="submitComplaint(event)">
+                    <div class="complaint-row">
+                        <div class="complaint-field">
+                            <label>الاسم <span class="opt">(اختياري)</span></label>
+                            <input type="text" id="complaintName" placeholder="اسمك الكريم" autocomplete="name">
+                        </div>
+                        <div class="complaint-field">
+                            <label>رقم الهاتف <span class="opt">(اختياري)</span></label>
+                            <input type="tel" id="complaintPhone" placeholder="05xxxxxxxx" autocomplete="tel" inputmode="tel">
+                        </div>
+                    </div>
+                    <div class="complaint-field">
+                        <label>نوع الرسالة</label>
+                        <select id="complaintType">
+                            <option value="شكوى">شكوى</option>
+                            <option value="اقتراح">اقتراح</option>
+                            <option value="استفسار">استفسار</option>
+                            <option value="مديح">مديح ❤</option>
+                        </select>
+                    </div>
+                    <div class="complaint-field">
+                        <label>رسالتك</label>
+                        <textarea id="complaintMessage" rows="5" placeholder="اكتبي رسالتك هون..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary complaint-submit" id="complaintSubmitBtn">ابعتي الرسالة</button>
+                    <p class="complaint-status" id="complaintStatus"></p>
+                </form>
             </div>
         </div>
     </section>
