@@ -1352,6 +1352,8 @@ function setDeliveryMethod(method) {
 /* ===== Zara-style hero carousel (horizontal slide, autoplay, arrows, dots, swipe) ===== */
 var heroIndex = 0;
 var heroTimer = null;
+var heroFxTypes = ['fade', 'zoom', 'wipe', 'rotate', 'slide', 'blur'];
+var heroFxCounter = 0;
 var heroWired = false;
 var heroAdminSlides = [];
 var heroSignature = '';
@@ -1431,9 +1433,13 @@ function applyHeroTransform() {
     if (!slides.length) return;
     if (heroIndex < 0) heroIndex = slides.length - 1;
     if (heroIndex >= slides.length) heroIndex = 0;
+    var fx = heroFxTypes[heroFxCounter % heroFxTypes.length];
+    heroFxCounter++;
     for (var i = 0; i < slides.length; i++) {
         var isActive = i === heroIndex;
+        for (var f = 0; f < heroFxTypes.length; f++) slides[i].classList.remove('hero-fx-' + heroFxTypes[f]);
         slides[i].classList.toggle('active', isActive);
+        if (isActive) slides[i].classList.add('hero-fx-' + fx);
         var v = slides[i].querySelector('video');
         if (v) {
             if (isActive) { try { v.currentTime = 0; } catch (e) {} var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }

@@ -245,8 +245,6 @@ body.has-banner .hero { margin-top: 0; }
     visibility: visible;
     z-index: 2;
     transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s;
-    /* nice rotational reveal on the incoming slide (echoes the fanned-image motion) */
-    animation: heroSlideIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .hero .hero-slide > img,
 .hero .hero-slide > video {
@@ -261,16 +259,25 @@ body.has-banner .hero { margin-top: 0; }
 .hero .hero-slide.active > video {
     animation: heroKenBurns 5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
-@keyframes heroSlideIn {
-    0%   { transform: rotate(2.5deg) scale(1.07); }
-    100% { transform: rotate(0deg) scale(1); }
-}
+/* ---- a unique transition for each image change (cycles so no two in a row match) ---- */
+.hero .hero-slide.active.hero-fx-fade   { animation: heroFxFade   0.9s ease both; }
+.hero .hero-slide.active.hero-fx-zoom   { animation: heroFxZoom   1s   cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hero .hero-slide.active.hero-fx-wipe   { animation: heroFxWipe   0.9s cubic-bezier(0.65, 0, 0.35, 1) both; }
+.hero .hero-slide.active.hero-fx-rotate { animation: heroFxRotate 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hero .hero-slide.active.hero-fx-slide  { animation: heroFxSlide  0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hero .hero-slide.active.hero-fx-blur   { animation: heroFxBlur   0.9s ease both; }
 @keyframes heroKenBurns {
     0%   { transform: scale(1.02) translate3d(0, 0, 0); }
     100% { transform: scale(1.1) translate3d(-1.5%, -1%, 0); }
 }
+@keyframes heroFxFade   { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes heroFxZoom   { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes heroFxWipe   { 0% { clip-path: inset(0 0 0 100%); } 100% { clip-path: inset(0 0 0 0%); } }
+@keyframes heroFxRotate { 0% { transform: rotate(2.5deg) scale(1.07); } 100% { transform: rotate(0deg) scale(1); } }
+@keyframes heroFxSlide  { 0% { transform: translateX(7%); } 100% { transform: translateX(0); } }
+@keyframes heroFxBlur   { 0% { filter: blur(16px); transform: scale(1.08); } 100% { filter: blur(0); transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) {
-    .hero .hero-slide.active { animation: none; }
+    .hero .hero-slide.active[class*="hero-fx-"] { animation: none; clip-path: none; filter: none; }
     .hero .hero-slide.active > img,
     .hero .hero-slide.active > video { animation: none; transform: scale(1); }
 }
