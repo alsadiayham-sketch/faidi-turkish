@@ -52,15 +52,23 @@
         </div>
     </nav>
 
+    <div class="mobile-menu-scrim" id="mobileMenuScrim" onclick="toggleMobileMenu()"></div>
     <div class="mobile-menu" id="mobileMenu">
-        <a href="index.html">الرئيسية</a>
-        <a href="dresses.html">فساتين</a>
-        <a href="clothes.html">أطقم وملابس</a>
-        <a href="accessories.html">إكسسوارات</a>
-        <a href="#about" onclick="toggleMobileMenu()">مين إحنا</a>
-        <a href="#delivery" onclick="toggleMobileMenu()">التوصيل</a>
-        <a href="#order-tracking" onclick="toggleMobileMenu()">تتبّعي طلبك</a>
-        <a href="#complaints" onclick="toggleMobileMenu()">شكوى أو اقتراح</a>
+        <div class="mobile-menu-head">
+            <span class="mobile-menu-title">فايدي تركش</span>
+            <button class="mobile-menu-close" onclick="toggleMobileMenu()" aria-label="إغلاق القائمة">✕</button>
+        </div>
+        <nav class="mobile-menu-links">
+            <a href="index.html">الرئيسية</a>
+            <a href="dresses.html">فساتين</a>
+            <a href="clothes.html">أطقم وملابس</a>
+            <a href="accessories.html">إكسسوارات</a>
+            <a href="#about" onclick="toggleMobileMenu()">مين إحنا</a>
+            <a href="#delivery" onclick="toggleMobileMenu()">التوصيل</a>
+            <a href="#order-tracking" onclick="toggleMobileMenu()">تتبّعي طلبك</a>
+            <a href="#complaints" onclick="toggleMobileMenu()">شكوى أو اقتراح</a>
+        </nav>
+        <a class="mobile-menu-cta" href="dresses.html">تسوّقي هلا</a>
     </div>
 
     <section class="hero" id="heroSection">
@@ -124,9 +132,9 @@
         <div class="container">
             <h2 class="section-title">مناطق التوصيل</h2>
             <div class="delivery-grid">
-                <div class="delivery-card"><span class="delivery-icon">🚗</span><h3>الضفة</h3><p>₪20 لكل المدن والبلدات</p></div>
-                <div class="delivery-card"><span class="delivery-icon">🏙️</span><h3>القدس</h3><p>₪30 مع توصيل سريع</p></div>
-                <div class="delivery-card"><span class="delivery-icon">📦</span><h3>الداخل</h3><p>₪50 تغليف وتوصيل آمن</p></div>
+                <div class="delivery-card"><svg class="delivery-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5h10.5v9H3z"/><path d="M13.5 9.5H17l3.5 3.5v2.5h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17.5" cy="18" r="1.7"/></svg><h3>الضفة</h3><p>₪20 لكل المدن والبلدات</p></div>
+                <div class="delivery-card"><svg class="delivery-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4.5H4z"/><path d="M6 10v7M10 10v7M14 10v7M18 10v7"/><path d="M4 20.5h16"/></svg><h3>القدس</h3><p>₪30 مع توصيل سريع</p></div>
+                <div class="delivery-card"><svg class="delivery-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-4 9 4-9 4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg><h3>الداخل</h3><p>₪50 تغليف وتوصيل آمن</p></div>
             </div>
         </div>
     </section>

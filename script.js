@@ -511,7 +511,11 @@ function scrollToProduct(productId) {
 }
 
 function toggleMobileMenu() {
-    document.getElementById('mobileMenu').classList.toggle('active');
+    var menu = document.getElementById('mobileMenu');
+    var scrim = document.getElementById('mobileMenuScrim');
+    var open = menu.classList.toggle('active');
+    if (scrim) scrim.classList.toggle('active', open);
+    document.body.classList.toggle('menu-open', open);
 }
 
 document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
