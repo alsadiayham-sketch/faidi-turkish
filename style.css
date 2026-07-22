@@ -839,6 +839,14 @@ html[dir="rtl"] .pdp-close { right: auto; left: 16px; }
 html[dir="rtl"] .pdp-image { border-radius: 0; }
 .pdp-image img,
 .pdp-image video { width: 100%; height: 100%; object-fit: cover; filter: saturate(1.06) contrast(1.03); }
+/* PDP GIF: poster shows instantly; gently pulse while the animation preloads, then settle when live. */
+.pdp-image img.pdp-anim { transition: opacity .35s ease; }
+.pdp-image img.pdp-anim.is-loading { animation: pdpAnimPulse 1.1s ease-in-out infinite; }
+.pdp-image img.pdp-anim.is-live { animation: none; opacity: 1; }
+@keyframes pdpAnimPulse { 0%,100% { opacity: 1; } 50% { opacity: .82; } }
+@media (prefers-reduced-motion: reduce) {
+    .pdp-image img.pdp-anim.is-loading { animation: none; }
+}
 .pdp-info { padding: 44px 38px; }
 .pdp-info h2 { font-family: var(--serif); font-size: 1.9rem; color: var(--primary); margin: 8px 0 14px; line-height: 1.4; }
 .pdp-meta { display: flex; gap: 14px; color: var(--text-light); font-size: 0.9rem; margin-bottom: 18px; }

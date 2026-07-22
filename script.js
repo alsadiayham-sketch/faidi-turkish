@@ -333,7 +333,7 @@ function renderProducts(productsToShow) {
             discountBadge,
             statusBadge,
             '<div class="product-image" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
-            '<img class="product-media" src="' + posterSrc + '" alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
+            '<img class="product-media" src="' + posterSrc + '" alt="' + product.name + '" loading="lazy" decoding="async" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
             '</div>',
             '<div class="product-info" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
             '<span class="product-brand">' + product.brand + '</span>',
@@ -1366,7 +1366,8 @@ function heroMediaEl(slide) {
     var url = slide.url;
     var isVideo = slide.type === 'video' || /\.(mp4|webm|ogg|mov)(\?|$)/i.test(url);
     if (isVideo) {
-        return '<video class="hero-media" src="' + url + '" muted loop playsinline preload="auto"></video>';
+        return '<video class="hero-media" src="' + url + '" muted loop playsinline preload="metadata"'
+            + (slide.poster ? ' poster="' + escapeHtml(slide.poster) + '"' : '') + '></video>';
     }
     return '<img class="hero-media" src="' + url + '" alt="' + (slide.title || 'فايدي تركش') + '">';
 }
@@ -1446,7 +1447,7 @@ function applyHeroTransform() {
         if (isActive) slides[i].classList.add('hero-fx-' + fx);
         var v = slides[i].querySelector('video');
         if (v) {
-            if (isActive) { try { v.currentTime = 0; } catch (e) {} var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+            if (isActive) { try { v.preload = 'auto'; v.currentTime = 0; } catch (e) {} var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
             else { v.pause(); }
         }
     }
@@ -1486,14 +1487,39 @@ function wireHeroControls() {
 function buildPdpMedia(product) {
     var media = product.video || product.image;
     var poster = product.image || product.poster || '';
-    if (!media) return '<img src="' + FALLBACK_IMAGE + '" alt="' + product.name + '">';
-    // Real video files play in a <video>; GIFs/images animate on their own in an <img>.
+    if (!media) return '<img src="' + FALLBACK_IMAGE + '" alt="' + escapeHtml(product.name) + '">';
+    var name = escapeHtml(product.name);
+    // Real video files play in a <video> with a poster so the first frame shows instantly.
     if (/\.(mp4|webm|ogg|mov)(\?|$)/i.test(media)) {
         return '<video src="' + media + '" autoplay muted loop playsinline preload="auto"' +
             (poster ? ' poster="' + poster + '"' : '') +
             ' onerror="this.outerHTML=\'&lt;img src=&quot;' + (poster || FALLBACK_IMAGE) + '&quot;&gt;\'"></video>';
     }
-    return '<img src="' + media + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
+    // Animated GIF: paint the static poster instantly, then swap to the GIF once it has decoded.
+    // This kills the long blank wait — the poster (usually already cached from the card) shows at once.
+    if (poster && poster !== media) {
+        return '<img class="pdp-anim" src="' + poster + '" data-gif="' + escapeHtml(media) + '" alt="' + name +
+            '" decoding="async" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
+    }
+    return '<img src="' + media + '" alt="' + name + '" decoding="async" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
+}
+
+// Preload the PDP GIF off-screen and swap it in only once fully decoded, so it animates immediately
+// (no partial/stuttering first play) while the poster holds the frame in the meantime.
+function preloadPdpAnimated() {
+    var el = document.querySelector('#pdpImage img.pdp-anim');
+    if (!el) return;
+    var gif = el.getAttribute('data-gif');
+    if (!gif) return;
+    el.classList.add('is-loading');
+    var loader = new Image();
+    loader.onload = function () {
+        el.src = gif;
+        el.classList.remove('is-loading');
+        el.classList.add('is-live');
+    };
+    loader.onerror = function () { el.classList.remove('is-loading'); };
+    loader.src = gif;
 }
 
 function openPDP(productId) {
@@ -1505,6 +1531,7 @@ function openPDP(productId) {
     pdpQty = 1;
 
     document.getElementById('pdpImage').innerHTML = buildPdpMedia(product);
+    preloadPdpAnimated();
     document.getElementById('pdpBrand').textContent = product.brand;
     document.getElementById('pdpName').textContent = product.name;
     document.getElementById('pdpQty').textContent = '1';
