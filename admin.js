@@ -1026,9 +1026,8 @@ function cloudinaryMediaUrls(publicId, resourceType) {
     var t = resourceType === 'image' ? 'image' : 'video';
     var base = 'https://res.cloudinary.com/' + CLOUDINARY.cloud + '/' + t + '/upload/';
     return {
-        // Bandwidth hard cap: eco quality + never wider than 1080px, so each view stays light
-        // and the free Cloudinary tier lasts far longer.
-        video: base + 'q_auto:eco,w_1080,c_limit/' + publicId + '.mp4',
+        // Width cap 1080 keeps files sane; q_auto picks a sharp quality automatically.
+        video: base + 'q_auto,w_1080,c_limit/' + publicId + '.mp4',
         poster: base + 'so_0,f_jpg,q_auto,w_1080/' + publicId + '.jpg'
     };
 }
