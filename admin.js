@@ -505,10 +505,15 @@ async function saveProduct(event) {
         setAdminLoading(true);
     }
 
-    // Video: convert an uploaded video to a GIF (or upload a GIF/animation as-is).
+    // Video: upload to Cloudinary and stream as a light MP4; grab its poster frame too.
     if (videoFile.files && videoFile.files[0]) {
         setAdminStatus('جاري معالجة الفيديو...', 'info');
-        videoUrl = await uploadProductMedia(videoFile.files[0], nextId + '_video');
+        var media = await uploadProductMedia(videoFile.files[0], nextId + '_video');
+        videoUrl = media.video || '';
+        if (media.poster && !imageUrl && !(imageFile.files && imageFile.files[0])) {
+            imageUrl = media.poster;
+        }
+        if (media.poster) posterUrl = media.poster;
     }
 
     // Picture: upload the still image if a file was chosen.
@@ -999,12 +1004,55 @@ function generatePosterFromUrl(url, name) {
 
 async function uploadProductMedia(file, productId) {
     if (file && file.type && file.type.indexOf('video') === 0) {
-        setAdminStatus('جاري تحويل الفيديو إلى صورة متحركة (GIF)...', 'info');
-        var gifBlob = await convertVideoToGif(file, function (p) { setAdminStatus('تحويل الفيديو: ' + p + '%', 'info'); });
-        setAdminStatus('جاري رفع الصورة المتحركة...', 'info');
-        return await uploadBlobToImgbb(gifBlob, (productId || 'product') + '_gif');
+        setAdminStatus('جاري رفع الفيديو بجودة عالية (MP4)...', 'info');
+        return await cloudinaryUpload(file, 'video', function (p) { setAdminStatus('رفع الفيديو: ' + p + '%', 'info'); });
     }
-    return await uploadProductImage(file, productId);
+    // A GIF chosen in the animated slot: send to Cloudinary so it streams as a light MP4 too.
+    if (file && file.type && file.type.indexOf('gif') >= 0) {
+        setAdminStatus('جاري رفع الصورة المتحركة وتحويلها إلى MP4...', 'info');
+        return await cloudinaryUpload(file, 'image', function (p) { setAdminStatus('رفع الملف: ' + p + '%', 'info'); });
+    }
+    // Any other still image in the animated slot: keep it as a plain picture (no motion).
+    var url = await uploadProductImage(file, productId);
+    return { video: '', poster: url };
+}
+
+var CLOUDINARY = { cloud: 'jorslmun', preset: 'faidi_unsigned' };
+
+// Build optimized delivery URLs for a Cloudinary asset. Videos (and animated GIFs
+// uploaded as images) stream as a small, progressively-loading MP4; the poster is a
+// sharp still of the first frame so the detail page shows instantly.
+function cloudinaryMediaUrls(publicId, resourceType) {
+    var t = resourceType === 'image' ? 'image' : 'video';
+    var base = 'https://res.cloudinary.com/' + CLOUDINARY.cloud + '/' + t + '/upload/';
+    return {
+        // Bandwidth hard cap: eco quality + never wider than 1080px, so each view stays light
+        // and the free Cloudinary tier lasts far longer.
+        video: base + 'q_auto:eco,w_1080,c_limit/' + publicId + '.mp4',
+        poster: base + 'so_0,f_jpg,q_auto,w_1080/' + publicId + '.jpg'
+    };
+}
+
+// Unsigned upload straight from the browser. resourceType 'video' for real videos,
+// 'image' for GIFs (Cloudinary still delivers them as MP4 via the URL above).
+function cloudinaryUpload(file, resourceType, onProgress) {
+    return new Promise(function (resolve, reject) {
+        var form = new FormData();
+        form.append('file', file);
+        form.append('upload_preset', CLOUDINARY.preset);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLOUDINARY.cloud + '/' + (resourceType === 'image' ? 'image' : 'video') + '/upload');
+        xhr.upload.onprogress = function (e) { if (e.lengthComputable && onProgress) onProgress(Math.round(e.loaded / e.total * 100)); };
+        xhr.onload = function () {
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data && data.public_id) resolve(cloudinaryMediaUrls(data.public_id, data.resource_type || resourceType));
+                else reject(new Error((data && data.error && data.error.message) || 'فشل رفع الفيديو إلى Cloudinary'));
+            } catch (err) { reject(err); }
+        };
+        xhr.onerror = function () { reject(new Error('تعذر الاتصال بخادم الفيديو')); };
+        xhr.send(form);
+    });
 }
 
 function uploadBlobToImgbb(blob, name) {

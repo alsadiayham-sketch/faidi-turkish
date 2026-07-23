@@ -2,3 +2,7 @@
 
 # local secrets
 faidi_auth_secret.txt
+
+# one-time migration scripts (contain admin credentials via env defaults)
+migrate-gifs.mjs
+cap-videos.mjs
